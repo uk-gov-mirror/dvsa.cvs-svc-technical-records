@@ -20,6 +20,7 @@ describe("insertTechRecordsList", () => {
       const mockDAO = new MockDAO();
       const techRecordsService = new TechRecordsService(mockDAO);
 
+      // @ts-ignore
       return techRecordsService.insertTechRecordsList(records)
           .then((data: ITechRecord[]) => {
             expect(data.length).toEqual(22);

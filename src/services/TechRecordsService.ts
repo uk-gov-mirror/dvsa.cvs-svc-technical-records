@@ -64,8 +64,8 @@ class TechRecordsService {
 
   public insertTechRecord(techRecord: ITechRecordWrapper) {
       return this.techRecordsDAO.createSingle(techRecord)
-          .then(() => {
-              return new HTTPResponse(201, "Technical Record created");
+          .then((data: any) => {
+              return data;
           })
           .catch((error: any) => {
               throw new HTTPError(error.statusCode, error.message);
