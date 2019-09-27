@@ -13,7 +13,7 @@ describe("insertTechRecordsList", () => {
       const MockDAO = jest.fn().mockImplementation(() => {
         return {
           createMultiple: () => {
-            return Promise.resolve({ UnprocessedItems: records });
+            return Promise.resolve({UnprocessedItems: records});
           }
         };
       });
@@ -22,9 +22,9 @@ describe("insertTechRecordsList", () => {
 
       // @ts-ignore
       return techRecordsService.insertTechRecordsList(records)
-          .then((data: ITechRecord[]) => {
-            expect(data.length).toEqual(22);
-          });
+        .then((data: ITechRecord[]) => {
+          expect(data.length).toEqual(22);
+        });
     });
 
     it("should return nothing", () => {
@@ -40,9 +40,9 @@ describe("insertTechRecordsList", () => {
 
       // @ts-ignore //Required because it decided records was different from the last time it was used otherwise
       return techRecordsService.insertTechRecordsList(records)
-          .then((data: ITechRecord[]) => {
-            expect(data).toEqual(undefined);
-          });
+        .then((data: ITechRecord[]) => {
+          expect(data).toEqual(undefined);
+        });
     });
 
 

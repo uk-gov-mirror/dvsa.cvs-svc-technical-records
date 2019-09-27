@@ -5,6 +5,7 @@ import Configuration from "../../src/utils/Configuration";
 import HTTPResponse from "../../src/models/HTTPResponse";
 import mockContext from "aws-lambda-mock-context";
 import event from "../resources/event.json";
+
 const sandbox = sinon.createSandbox();
 
 describe("The lambda function handler", () => {
@@ -52,7 +53,7 @@ describe("The lambda function handler", () => {
 
         const result = await handler(invalidPathEvent, ctx);
         expect(result.statusCode).toEqual(400);
-        expect(result.body).toStrictEqual(JSON.stringify({ error: `Route ${invalidPathEvent.httpMethod} ${invalidPathEvent.path} was not found.` }));
+        expect(result.body).toStrictEqual(JSON.stringify({error: `Route ${invalidPathEvent.httpMethod} ${invalidPathEvent.path} was not found.`}));
       });
     });
   });
@@ -64,7 +65,7 @@ describe("The lambda function handler", () => {
 
       const result = await handler(event, ctx);
       expect(result.statusCode).toEqual(400);
-      expect(result.body).toStrictEqual(JSON.stringify({ error: `Route ${event.httpMethod} ${event.path} was not found.` }));
+      expect(result.body).toStrictEqual(JSON.stringify({error: `Route ${event.httpMethod} ${event.path} was not found.`}));
       configStub.restore();
     });
   });

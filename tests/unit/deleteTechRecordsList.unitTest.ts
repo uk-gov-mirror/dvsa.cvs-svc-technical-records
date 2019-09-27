@@ -10,7 +10,7 @@ describe("deleteTechRecordsList", () => {
       const MockDAO = jest.fn().mockImplementation(() => {
         return {
           deleteMultiple: () => {
-            return Promise.resolve({ UnprocessedItems: undefined });
+            return Promise.resolve({UnprocessedItems: undefined});
           }
         };
       });
@@ -27,7 +27,7 @@ describe("deleteTechRecordsList", () => {
       const MockDAO = jest.fn().mockImplementation(() => {
         return {
           deleteMultiple: () => {
-            return Promise.resolve({ UnprocessedItems: [{}, {}, {}] });
+            return Promise.resolve({UnprocessedItems: [{}, {}, {}]});
           }
         };
       });
