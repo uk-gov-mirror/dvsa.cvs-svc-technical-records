@@ -236,6 +236,7 @@ describe("updateTechRecords", () => {
         it("should return 400 Bad Request", () => {
           const vin = Date.now().toString();
           techRecord.partialVin = techRecord.vin.substr(techRecord.vin.length - 6);
+          techRecord.primaryVrm = Math.floor(100000 + Math.random() * 900000).toString();
           return LambdaTester(UpdateTechRecordsFunction)
               .event({
                 path: `/vehicles/${vin}`,
@@ -255,6 +256,7 @@ describe("updateTechRecords", () => {
         it("should return 400 invalid TechRecord", () => {
           const vin = Date.now().toString();
           techRecord.partialVin = vin.substr(vin.length - 6);
+          techRecord.primaryVrm = Math.floor(100000 + Math.random() * 900000).toString();
           techRecord.techRecord = [];
           return LambdaTester(UpdateTechRecordsFunction)
               .event({
@@ -275,6 +277,7 @@ describe("updateTechRecords", () => {
         it("should return 400 invalid TechRecord", () => {
           const vin = Date.now().toString();
           techRecord.partialVin = vin.substr(vin.length - 6);
+          techRecord.primaryVrm = Math.floor(100000 + Math.random() * 900000).toString();
           techRecord.techRecord = [];
           return LambdaTester(UpdateTechRecordsFunction)
               .event({
@@ -297,6 +300,7 @@ describe("updateTechRecords", () => {
         it("should return 400 Invalid path parameter 'vin'", () => {
           const vin = Date.now().toString();
           techRecord.partialVin = vin.substr(vin.length - 6);
+          techRecord.primaryVrm = Math.floor(100000 + Math.random() * 900000).toString();
           techRecord.techRecord = [];
           return LambdaTester(UpdateTechRecordsFunction)
               .event({
@@ -317,6 +321,7 @@ describe("updateTechRecords", () => {
         it("should return 400 Invalid path parameter 'vin'", () => {
           const vin = Date.now().toString();
           techRecord.partialVin = vin.substr(vin.length - 6);
+          techRecord.primaryVrm = Math.floor(100000 + Math.random() * 900000).toString();
           techRecord.techRecord = [];
           return LambdaTester(UpdateTechRecordsFunction)
               .event({
@@ -337,6 +342,7 @@ describe("updateTechRecords", () => {
         it("should return 400 Invalid path parameter 'vin'", () => {
           const vin = Date.now().toString();
           techRecord.partialVin = vin.substr(vin.length - 6);
+          techRecord.primaryVrm = Math.floor(100000 + Math.random() * 900000).toString();
           techRecord.techRecord = [];
           return LambdaTester(UpdateTechRecordsFunction)
               .event({

@@ -5,6 +5,7 @@ const request = supertest(url);
 import {populateDatabase, emptyDatabase} from "../util/dbOperations";
 import mockData from "../resources/technical-records.json";
 import {HTTPRESPONSE} from "../../src/assets/Enums";
+import ITechRecordWrapper from "../../@Types/ITechRecordWrapper";
 
 describe("techRecords", () => {
   describe("getTechRecords", () => {
