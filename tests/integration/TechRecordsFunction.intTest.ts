@@ -20,9 +20,9 @@ describe("getTechRecords", () => {
     await populateDatabase();
   });
   context("when the path is invalid", () => {
-    it("should return 400", () => {
+    it("should return 400", async () => {
       // Event has a path, but the path does not contain a Search Term
-      return LambdaTester(GetTechRecordsFunction)
+      await LambdaTester(GetTechRecordsFunction)
         .event({
           path: "test"
         })
@@ -36,8 +36,8 @@ describe("getTechRecords", () => {
 
   context("when the path is valid", () => {
     context("and the vehicle was found", () => {
-      it("should return 200", () => {
-        return LambdaTester(GetTechRecordsFunction)
+      it("should return 200", async () => {
+        await LambdaTester(GetTechRecordsFunction)
           .event({
             path: "/vehicles/XMGDE02FS0H012345/tech-records",
             pathParameters: {
@@ -55,8 +55,8 @@ describe("getTechRecords", () => {
     });
 
     context("and the vehicle was not found", () => {
-      it("should return 404", () => {
-        return LambdaTester(GetTechRecordsFunction)
+      it("should return 404", async () => {
+        await LambdaTester(GetTechRecordsFunction)
           .event({
             path: "/vehicles/ABCDE02FS0H012345/tech-records",
             pathParameters: {
@@ -71,8 +71,8 @@ describe("getTechRecords", () => {
     });
 
     context("and the search identifier is lower than 3", () => {
-      it("should return 400", () => {
-        return LambdaTester(GetTechRecordsFunction)
+      it("should return 400", async () => {
+        await LambdaTester(GetTechRecordsFunction)
           .event({
             path: "/vehicles/XM/tech-records",
             pathParameters: {
@@ -85,12 +85,6 @@ describe("getTechRecords", () => {
           });
       });
     });
-  });
-  beforeEach(() => {
-    jest.setTimeout(5000);
-  });
-  afterEach(() => {
-    jest.setTimeout(5000);
   });
 });
 
@@ -114,8 +108,8 @@ describe("postTechRecords", () => {
 
   context("when trying to create a new vehicle", () => {
     context("and the vehicle was found", () => {
-      it("should return error 400", () => {
-        return LambdaTester(PostTechRecordsFunction)
+      it("should return error 400", async () => {
+        await LambdaTester(PostTechRecordsFunction)
             .event({
               path: "/vehicles",
               body: techRecord
@@ -128,11 +122,11 @@ describe("postTechRecords", () => {
     });
 
     context("and the vehicle was not found", () => {
-      it("should return 201 created", () => {
+      it("should return 201 created", async () => {
         techRecord.vin = Date.now().toString();
         techRecord.partialVin = techRecord.vin.substr(techRecord.vin.length - 6);
         techRecord.primaryVrm = Math.floor(100000 + Math.random() * 900000).toString();
-        return LambdaTester(PostTechRecordsFunction)
+        await LambdaTester(PostTechRecordsFunction)
             .event({
               path: "/vehicles",
               body: techRecord
@@ -145,11 +139,11 @@ describe("postTechRecords", () => {
     });
 
     context("and the techRecord array is empty", () => {
-      it("should return 400 invalid TechRecord", () => {
+      it("should return 400 invalid TechRecord", async () => {
         techRecord.vin = Date.now().toString();
         techRecord.partialVin = techRecord.vin.substr(techRecord.vin.length - 6);
         techRecord.techRecord = [];
-        return LambdaTester(PostTechRecordsFunction)
+        await LambdaTester(PostTechRecordsFunction)
             .event({
               path: "/vehicles",
               body: techRecord
@@ -162,11 +156,11 @@ describe("postTechRecords", () => {
     });
 
     context("and the event body is empty", () => {
-      it("should return 400 invalid TechRecord", () => {
+      it("should return 400 invalid TechRecord", async () => {
         techRecord.vin = Date.now().toString();
         techRecord.partialVin = techRecord.vin.substr(techRecord.vin.length - 6);
         techRecord.techRecord = [];
-        return LambdaTester(PostTechRecordsFunction)
+        await LambdaTester(PostTechRecordsFunction)
             .event({
               path: "/vehicles",
               body: undefined
@@ -177,12 +171,6 @@ describe("postTechRecords", () => {
             });
       });
     });
-  });
-  beforeEach(() => {
-    jest.setTimeout(5000);
-  });
-  afterEach(() => {
-    jest.setTimeout(5000);
   });
 });
 
@@ -207,12 +195,12 @@ describe("updateTechRecords", () => {
   context("when trying to update a vehicle", () => {
     context("and the path parameter VIN is valid", () => {
       context("and the vehicle was found", () => {
-        it("should return 200 and the updated vehicle", () => {
+        it("should return 200 and the updated vehicle", async () => {
           const vin = techRecord.vin;
           delete techRecord.vin;
           techRecord.techRecord[0].bodyType.description = "updated tech record";
           techRecord.techRecord[0].grossGbWeight = 9900;
-          return LambdaTester(UpdateTechRecordsFunction)
+          await LambdaTester(UpdateTechRecordsFunction)
               .event({
                 path: `/vehicles/${vin}`,
                 pathParameters: {
@@ -233,11 +221,11 @@ describe("updateTechRecords", () => {
       });
 
       context("and the vehicle was not found", () => {
-        it("should return 400 Bad Request", () => {
+        it("should return 400 Bad Request", async () => {
           const vin = Date.now().toString();
           techRecord.partialVin = techRecord.vin.substr(techRecord.vin.length - 6);
           techRecord.primaryVrm = Math.floor(100000 + Math.random() * 900000).toString();
-          return LambdaTester(UpdateTechRecordsFunction)
+          await LambdaTester(UpdateTechRecordsFunction)
               .event({
                 path: `/vehicles/${vin}`,
                 pathParameters: {
@@ -253,12 +241,12 @@ describe("updateTechRecords", () => {
       });
 
       context("and the techRecord array is empty", () => {
-        it("should return 400 invalid TechRecord", () => {
+        it("should return 400 invalid TechRecord", async () => {
           const vin = Date.now().toString();
           techRecord.partialVin = vin.substr(vin.length - 6);
           techRecord.primaryVrm = Math.floor(100000 + Math.random() * 900000).toString();
           techRecord.techRecord = [];
-          return LambdaTester(UpdateTechRecordsFunction)
+          await LambdaTester(UpdateTechRecordsFunction)
               .event({
                 path: `/vehicles/${vin}`,
                 pathParameters: {
@@ -274,12 +262,12 @@ describe("updateTechRecords", () => {
       });
 
       context("and the event body is empty", () => {
-        it("should return 400 invalid TechRecord", () => {
+        it("should return 400 invalid TechRecord", async () => {
           const vin = Date.now().toString();
           techRecord.partialVin = vin.substr(vin.length - 6);
           techRecord.primaryVrm = Math.floor(100000 + Math.random() * 900000).toString();
           techRecord.techRecord = [];
-          return LambdaTester(UpdateTechRecordsFunction)
+          await LambdaTester(UpdateTechRecordsFunction)
               .event({
                 path: `/vehicles/${vin}`,
                 pathParameters: {
@@ -297,12 +285,12 @@ describe("updateTechRecords", () => {
 
     context("and the path parameter VIN is invalid", () => {
       context("and the path parameter VIN is null", () => {
-        it("should return 400 Invalid path parameter 'vin'", () => {
+        it("should return 400 Invalid path parameter 'vin'", async () => {
           const vin = Date.now().toString();
           techRecord.partialVin = vin.substr(vin.length - 6);
           techRecord.primaryVrm = Math.floor(100000 + Math.random() * 900000).toString();
           techRecord.techRecord = [];
-          return LambdaTester(UpdateTechRecordsFunction)
+          await LambdaTester(UpdateTechRecordsFunction)
               .event({
                 path: `/vehicles/${vin}`,
                 pathParameters: {
@@ -318,12 +306,12 @@ describe("updateTechRecords", () => {
       });
 
       context("and the path parameter VIN is shorter than 9 characters", () => {
-        it("should return 400 Invalid path parameter 'vin'", () => {
+        it("should return 400 Invalid path parameter 'vin'", async () => {
           const vin = Date.now().toString();
           techRecord.partialVin = vin.substr(vin.length - 6);
           techRecord.primaryVrm = Math.floor(100000 + Math.random() * 900000).toString();
           techRecord.techRecord = [];
-          return LambdaTester(UpdateTechRecordsFunction)
+          await LambdaTester(UpdateTechRecordsFunction)
               .event({
                 path: `/vehicles/${vin}`,
                 pathParameters: {
@@ -339,12 +327,12 @@ describe("updateTechRecords", () => {
       });
 
       context("and the path parameter VIN contains non alphanumeric characters", () => {
-        it("should return 400 Invalid path parameter 'vin'", () => {
+        it("should return 400 Invalid path parameter 'vin'", async () => {
           const vin = Date.now().toString();
           techRecord.partialVin = vin.substr(vin.length - 6);
           techRecord.primaryVrm = Math.floor(100000 + Math.random() * 900000).toString();
           techRecord.techRecord = [];
-          return LambdaTester(UpdateTechRecordsFunction)
+          await LambdaTester(UpdateTechRecordsFunction)
               .event({
                 path: `/vehicles/${vin}`,
                 pathParameters: {
@@ -359,12 +347,6 @@ describe("updateTechRecords", () => {
         });
       });
     });
-  });
-  beforeEach(() => {
-    jest.setTimeout(5000);
-  });
-  afterEach(() => {
-    jest.setTimeout(5000);
   });
 });
 
