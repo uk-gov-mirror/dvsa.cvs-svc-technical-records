@@ -9,7 +9,7 @@ describe("insertTechRecordsList", () => {
       jest.restoreAllMocks();
     });
 
-    it("should return the unprocessed items", () => {
+    it("should return the unprocessed items", async () => {
       const MockDAO = jest.fn().mockImplementation(() => {
         return {
           createMultiple: () => {
@@ -21,13 +21,11 @@ describe("insertTechRecordsList", () => {
       const techRecordsService = new TechRecordsService(mockDAO);
 
       // @ts-ignore
-      return techRecordsService.insertTechRecordsList(records)
-        .then((data: ITechRecord[]) => {
-          expect(data.length).toEqual(22);
-        });
+      const data: ITechRecord[] = await techRecordsService.insertTechRecordsList(records);
+      expect(data.length).toEqual(22);
     });
 
-    it("should return nothing", () => {
+    it("should return nothing", async () => {
       const MockDAO = jest.fn().mockImplementation(() => {
         return {
           createMultiple: () => {
@@ -39,17 +37,13 @@ describe("insertTechRecordsList", () => {
       const techRecordsService = new TechRecordsService(mockDAO);
 
       // @ts-ignore //Required because it decided records was different from the last time it was used otherwise
-      return techRecordsService.insertTechRecordsList(records)
-        .then((data: ITechRecord[]) => {
-          expect(data).toEqual(undefined);
-        });
+      const data: ITechRecord[] = await techRecordsService.insertTechRecordsList(records);
+      expect(data).toEqual(undefined);
     });
-
-
   });
 
   context("database call fails inserting items", () => {
-    it("should return error 500", () => {
+    it("should return error 500", async () => {
       const MockDAO = jest.fn().mockImplementation(() => {
         return {
           createMultiple: () => {
@@ -60,13 +54,14 @@ describe("insertTechRecordsList", () => {
       const mockDAO = new MockDAO();
       const techRecordsService = new TechRecordsService(mockDAO);
 
-      // @ts-ignore
-      return techRecordsService.insertTechRecordsList(records)
-        .catch((errorResponse: any) => {
-          expect(errorResponse).toBeInstanceOf(HTTPError);
-          expect(errorResponse.statusCode).toEqual(500);
-          expect(errorResponse.body).toEqual("Internal Server Error");
-        });
+      try {
+        // @ts-ignore
+        expect(await techRecordsService.insertTechRecordsList(records)).toThrowError();
+      } catch (errorResponse) {
+        expect(errorResponse).toBeInstanceOf(HTTPError);
+        expect(errorResponse.statusCode).toEqual(500);
+        expect(errorResponse.body).toEqual("Internal Server Error");
+      }
     });
   });
 });
