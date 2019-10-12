@@ -49,9 +49,9 @@ describe("deleteTechRecordsList", () => {
       const mockDAO = new MockDAO();
       const techRecordsService = new TechRecordsService(mockDAO);
 
-      try{
+      try {
         expect(await techRecordsService.deleteTechRecordsList(recordIds)).toThrowError();
-      } catch(errorResponse) {
+      } catch (errorResponse) {
         expect(errorResponse).toBeInstanceOf(HTTPError);
         expect(errorResponse.statusCode).toEqual(500);
         expect(errorResponse.body).toEqual("Internal Server Error");
