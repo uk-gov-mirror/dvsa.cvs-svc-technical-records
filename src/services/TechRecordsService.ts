@@ -1,8 +1,7 @@
 import HTTPError from "../models/HTTPError";
 import TechRecordsDAO from "../models/TechRecordsDAO";
-import ITechRecord from "../../@Types/ITechRecord";
 import ITechRecordWrapper from "../../@Types/ITechRecordWrapper";
-import HTTPResponse from "../models/HTTPResponse";
+import { HTTPRESPONSE, STATUS } from "../assets/Enums";
 
 /**
  * Fetches the entire list of Technical Records from the database.
@@ -19,76 +18,71 @@ class TechRecordsService {
     return this.techRecordsDAO.getBySearchTerm(searchTerm)
       .then((data: any) => {
         if (data.Count === 0) {
-          throw new HTTPError(404, "No resources match the search criteria.");
+          throw new HTTPError(404, HTTPRESPONSE.RESOURCE_NOT_FOUND);
         }
 
         if (data.Count > 1) {
-          throw new HTTPError(422, "The provided partial VIN returned more than one match.");
+          throw new HTTPError(422, HTTPRESPONSE.MORE_THAN_ONE_MATCH);
         }
         // Formatting the object for lambda function
-        const response = data.Items
-          .map((item: ITechRecordWrapper) => {
-            // Adding primary and secondary VRMs in the same array
-            const vrms = [{ vrm: item.primaryVrm, isPrimary: true }];
-            Object.assign(item, {
-              vrms
-            });
-            // Cleaning up unneeded properties
-            delete item.primaryVrm; // No longer needed
-            delete item.secondaryVrms; // No longer needed
-            delete item.partialVin; // No longer needed
-            // Filtering the tech records based on their status
-            item.techRecord = item.techRecord.filter((techRecord: ITechRecord) => {
-              return techRecord.statusCode === status;
-            });
-            return item;
-          })
-          .filter((item: ITechRecordWrapper) => { // We do not want results without tech records, so let's fix that
-            return item.techRecord.length > 0;
-          });
-        if (response.length === 0) {
-          throw new HTTPError(404, "No resources match the search criteria.");
-        }
+        let techRecordItem = data.Items[0];
+        techRecordItem = this.filterTechRecordsByStatus(techRecordItem, status);
 
-        return response[0];
+        techRecordItem = this.formatTechRecordItemForResponse(techRecordItem);
+
+        return techRecordItem;
       })
       .catch((error: any) => {
         if (!(error instanceof HTTPError)) {
           console.error(error);
           error.statusCode = 500;
-          error.body = "Internal Server Error";
+          error.body = HTTPRESPONSE.INTERNAL_SERVER_ERROR;
         }
         throw new HTTPError(error.statusCode, error.body);
       });
   }
 
-  public insertTechRecord(techRecord: ITechRecordWrapper) {
-      return this.techRecordsDAO.createSingle(techRecord)
-          .then((data: any) => {
-              return data;
-          })
-          .catch((error: any) => {
-              throw new HTTPError(error.statusCode, error.message);
-          });
+  private filterTechRecordsByStatus(techRecordItem: ITechRecordWrapper, status: string) {
+    const originalTechRecordItem = JSON.parse(JSON.stringify(techRecordItem));
+    let provisionalOverCurrent = false;
+    if (status === STATUS.PROVISIONAL_OVER_CURRENT) {
+      provisionalOverCurrent = true;
+      status = STATUS.PROVISIONAL;
+    }
+
+    techRecordItem.techRecord = techRecordItem.techRecord
+      .filter((techRecord: any) => {
+        return techRecord.statusCode === status;
+      });
+
+    const { length } = originalTechRecordItem.techRecord;
+    const { statusCode } = originalTechRecordItem.techRecord[0];
+
+    if (provisionalOverCurrent && length === 1 && techRecordItem.techRecord.length > 0 && (statusCode === STATUS.CURRENT || statusCode === STATUS.PROVISIONAL)) {
+      return techRecordItem;
+    }
+
+    if (provisionalOverCurrent && ((length === techRecordItem.techRecord.length) || (0 === techRecordItem.techRecord.length))) {
+      techRecordItem = this.filterTechRecordsByStatus(originalTechRecordItem, STATUS.CURRENT);
+    }
+
+    if (techRecordItem.techRecord.length <= 0) { throw new HTTPError(404, HTTPRESPONSE.RESOURCE_NOT_FOUND); }
+
+    return techRecordItem;
   }
 
-  public updateTechRecord(techRecord: ITechRecordWrapper) {
-      return this.techRecordsDAO.updateSingle(techRecord)
-          .then((data: any) => {
-              const response = data.Attributes;
-              const vrms = [{ vrm: response.primaryVrm, isPrimary: true }];
-              Object.assign(response, {
-                  vrms
-              });
-              // Cleaning up unneeded properties
-              delete response.primaryVrm; // No longer needed
-              delete response.secondaryVrms; // No longer needed
-              delete response.partialVin; // No longer needed
-              return response;
-          })
-          .catch((error: any) => {
-              throw new HTTPError(error.statusCode, error.message);
-          });
+  public formatTechRecordItemForResponse(techRecordItem: ITechRecordWrapper) {
+    // Adding primary and secondary VRMs in the same array
+    const vrms = [{ vrm: techRecordItem.primaryVrm, isPrimary: true }];
+    Object.assign(techRecordItem, {
+      vrms
+    });
+    // Cleaning up unneeded properties
+    delete techRecordItem.primaryVrm; // No longer needed
+    delete techRecordItem.secondaryVrms; // No longer needed
+    delete techRecordItem.partialVin; // No longer needed
+
+    return techRecordItem;
   }
 
   public insertTechRecordsList(techRecordItems: ITechRecordWrapper[]) {
@@ -97,8 +91,8 @@ class TechRecordsService {
         if (data.UnprocessedItems) { return data.UnprocessedItems; }
       })
       .catch((error: any) => {
-          console.error(error);
-          throw new HTTPError(500, "Internal Server Error");
+        console.error(error);
+        throw new HTTPError(500, HTTPRESPONSE.INTERNAL_SERVER_ERROR);
       });
   }
 
@@ -108,10 +102,40 @@ class TechRecordsService {
         if (data.UnprocessedItems) { return data.UnprocessedItems; }
       })
       .catch((error: any) => {
-          console.error(error);
-          throw new HTTPError(500, "Internal Server Error");
+        console.error(error);
+        throw new HTTPError(500, HTTPRESPONSE.INTERNAL_SERVER_ERROR);
       });
   }
+
+  public insertTechRecord(techRecord: ITechRecordWrapper) {
+    return this.techRecordsDAO.createSingle(techRecord)
+      .then((data: any) => {
+        return data;
+      })
+      .catch((error: any) => {
+        throw new HTTPError(error.statusCode, error.message);
+      });
+  }
+
+  public updateTechRecord(techRecord: ITechRecordWrapper) {
+    return this.techRecordsDAO.updateSingle(techRecord)
+      .then((data: any) => {
+        const response = data.Attributes;
+        const vrms = [{ vrm: response.primaryVrm, isPrimary: true }];
+        Object.assign(response, {
+          vrms
+        });
+        // Cleaning up unneeded properties
+        delete response.primaryVrm; // No longer needed
+        delete response.secondaryVrms; // No longer needed
+        delete response.partialVin; // No longer needed
+        return response;
+      })
+      .catch((error: any) => {
+        throw new HTTPError(error.statusCode, error.message);
+      });
+  }
+
 }
 
 export default TechRecordsService;
