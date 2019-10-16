@@ -23,11 +23,11 @@ defineFeature(feature, test => {
       response = await request.get(requestUrl);
     });
     and('for the identified vehicle in the database there is a Technical Record with the "statusCode" = "current"', () => {
-      const isStatusPresent = isStatusCodePresent(response.body, "current");
+      const isStatusPresent = isStatusCodePresent(mockData[9], "current");
       expect(isStatusPresent).toBe(true);
     });
     and('for the identified vehicle in the database there is a Technical Record with the "statusCode" = "provisional"', () => {
-      const isStatusPresent = isStatusCodePresent(response.body, "provisional");
+      const isStatusPresent = isStatusCodePresent(mockData[9], "provisional");
       expect(isStatusPresent).toBe(true);
     });
     then('for the query parameter "status", the default value "provisional_over_current" will be taken into account', () => {
@@ -46,9 +46,9 @@ defineFeature(feature, test => {
   });
 });
 
-const isStatusCodePresent = (techRecord: any, status: string) => {
+const isStatusCodePresent = (completeTechRecord: any, status: string) => {
   let isStatusCodePresent = false;
-  techRecord.forEach((record: any) => {
+  completeTechRecord.techRecord.forEach((record: any) => {
     if (record.statusCode === status) {
       isStatusCodePresent = true;
     }
