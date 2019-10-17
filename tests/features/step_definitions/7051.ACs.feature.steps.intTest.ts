@@ -7,10 +7,16 @@ const request = supertest(url);
 import {convertTo7051Response} from "../../util/dbOperations";
 import mockData from "../../resources/technical-records.json";
 import * as _ from "lodash";
+import mockContext from "aws-lambda-mock-context";
+
+const opts = Object.assign({
+  timeout: 0.5
+});
 
 const feature = loadFeature(path.resolve(__dirname, "../7051.ACs.feature"));
 
 defineFeature(feature, test => {
+  let ctx: any = mockContext(opts);
   test('AC1.1 API Consumer retrieve the Vehicle Technical Records for - ' +
     'query parameter "status" not provided & vehicle has both "current" and "provisional" technical records', ({given, when, then, and}) => {
     let requestUrl: string;
@@ -184,6 +190,8 @@ defineFeature(feature, test => {
       expect(response.status).toEqual(422);
     });
   });
+  ctx.succeed('done');
+  ctx = null;
 });
 
 const isStatusCodePresent = (completeTechRecord: any, status: string) => {
