@@ -4,6 +4,9 @@ import {VEHICLE_TYPE, SEARCHCRITERIA} from "../assets/Enums";
 import Joi from "@hapi/joi";
 import {psvValidation} from "./PsvValidations";
 import {trlValidation} from "./TrlValidations";
+import {lgvValidation} from "./LgvValidations";
+import {carValidation} from "./CarValidations";
+import {motorcycleValidation} from "./MotorcycleValidations";
 
 const checkIfTankOrBattery = (payload: ITechRecord) => {
   let isTankOrBattery = false;
@@ -24,6 +27,12 @@ export const validatePayload = (payload: ITechRecord) => {
     return psvValidation.validate(payload);
   } else if (payload.vehicleType === VEHICLE_TYPE.TRL) {
     return trlValidation.validate(payload, {context: {isTankOrBattery}});
+  } else if (payload.vehicleType === VEHICLE_TYPE.LGV) {
+    return lgvValidation.validate(payload);
+  } else if (payload.vehicleType === VEHICLE_TYPE.CAR) {
+    return carValidation.validate(payload);
+  } else if (payload.vehicleType === VEHICLE_TYPE.MOTORCYCLE) {
+    return motorcycleValidation.validate(payload);
   } else {
     return {
       error: {

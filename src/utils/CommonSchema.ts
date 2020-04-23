@@ -5,14 +5,14 @@ const Joi = require("@hapi/joi")
 import {
   APPROVAL_TYPE,
   BODY_TYPE_DESCRIPTION,
+  EU_VEHICLE_CATEGORY_VALIDATION,
   FITMENT_CODE,
   MICROFILM_DOCUMENT_TYPE,
   PLATE_REASON_FOR_ISSUE,
+  RECORD_COMPLETENESS,
   VEHICLE_CLASS_DESCRIPTION,
   VEHICLE_CONFIGURATION,
-  VEHICLE_TYPE_VALIDATION,
-  RECORD_COMPLETENESS,
-  EU_VEHICLE_CATEGORY_VALIDATION
+  VEHICLE_TYPE_VALIDATION
 } from "../assets/Enums";
 
 export const brakesSchema = Joi.object().keys({
@@ -63,6 +63,17 @@ export const applicantDetailsSchema = Joi.object().keys({
   emailAddress: Joi.string().max(255).optional().allow(null)
 }).required();
 
+export const applicantDetailsSchemaOptional = Joi.object().keys({
+  name: Joi.string().max(150).optional().allow(null),
+  address1: Joi.string().max(60).optional().allow(null),
+  address2: Joi.string().max(60).optional().allow(null),
+  postTown: Joi.string().max(60).optional().allow(null),
+  address3: Joi.string().max(60).optional().allow(null),
+  postCode: Joi.string().max(12).optional().allow(null),
+  telephoneNumber: Joi.string().max(25).optional().allow(null),
+  emailAddress: Joi.string().max(255).optional().allow(null)
+}).optional().allow(null);
+
 export const commonSchema = Joi.object().keys({
   recordCompleteness: Joi.string().valid(...RECORD_COMPLETENESS).required(),
   euVehicleCategory: Joi.string().valid(...EU_VEHICLE_CATEGORY_VALIDATION).required(),
@@ -104,6 +115,32 @@ export const commonSchema = Joi.object().keys({
   microfilm: microfilmSchema,
   plates: Joi.array().items(platesSchema).optional().allow(null),
   reasonForCreation: Joi.string().max(100).required(),
+  createdAt: Joi.string().optional().allow(null),
+  createdByName: Joi.string().optional(),
+  createdById: Joi.string().optional(),
+  lastUpdatedAt: Joi.string().optional().allow(null),
+  lastUpdatedByName: Joi.string().optional(),
+  lastUpdatedById: Joi.string().optional()
+}).required();
+
+export const commonSchemaLgvMotorcycleCar = Joi.object().keys({
+  vehicleType: Joi.string().valid(...VEHICLE_TYPE_VALIDATION).required(),
+  regnDate: Joi.date().format("YYYY-MM-DD").raw().optional().allow(null),
+  manufactureYear: Joi.number().min(0).max(9999).optional().allow(null),
+  noOfAxles: Joi.number().min(0).max(99).required(),
+  vehicleClass: Joi.object().keys({
+    code: Joi.any().when("description", {
+      is: Joi.string().valid(...VEHICLE_CLASS_DESCRIPTION).required(),
+      then: Joi.string().optional(),
+      otherwise: Joi.object().forbidden()
+    }),
+    description: Joi.string().valid(...VEHICLE_CLASS_DESCRIPTION).required()
+  }).optional().allow(null),
+  euVehicleCategory: Joi.string().valid(...EU_VEHICLE_CATEGORY_VALIDATION).optional().allow(null),
+  applicantDetails: applicantDetailsSchemaOptional,
+  remarks: Joi.string().max(1024).optional().allow(null),
+  reasonForCreation: Joi.string().max(100).required(),
+  recordCompleteness: Joi.string().valid(...RECORD_COMPLETENESS).optional(),
   createdAt: Joi.string().optional().allow(null),
   createdByName: Joi.string().optional(),
   createdById: Joi.string().optional(),

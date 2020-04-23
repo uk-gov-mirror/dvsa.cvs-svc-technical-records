@@ -44,7 +44,10 @@ export enum UPDATE_TYPE {
 export enum VEHICLE_TYPE {
     HGV = "hgv",
     TRL = "trl",
-    PSV = "psv"
+    PSV = "psv",
+    CAR = "car",
+    LGV = "lgv",
+    MOTORCYCLE = "motorcycle"
 }
 
 export enum EU_VEHICLE_CATEGORY {
@@ -71,7 +74,10 @@ export enum EU_VEHICLE_CATEGORY {
 export const VEHICLE_TYPE_VALIDATION: string[] = [
     "psv",
     "trl",
-    "hgv"
+    "hgv",
+    "car",
+    "lgv",
+    "motorcycle"
 ];
 
 export const FUEL_PROPULSION_SYSTEM: string[] = [
@@ -281,4 +287,18 @@ export const FRAME_DESCRIPTION: string[] = [
 export const LETTER_TYPE: string[] = [
     "Trailer authorization",
     "Trailer rejection"
+];
+
+export const VEHICLE_SUBCLASS: string[] = [
+    "N",
+    "P",
+    "A",
+    "S",
+    "C",
+    "L",
+    "T",
+    "E",
+    "M",
+    "R",
+    "W"
 ];

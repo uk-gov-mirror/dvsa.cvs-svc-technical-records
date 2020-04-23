@@ -11,11 +11,6 @@ import {VEHICLE_TYPE, BODY_TYPE_DESCRIPTION, VEHICLE_CLASS_DESCRIPTION} from "..
 const createPayload = () => {
   const techRec: any = cloneDeep(mockData[74]);
   techRec.techRecord[0].reasonForCreation = "some reason for update";
-  delete techRec.techRecord[0].createdByName;
-  delete techRec.techRecord[0].createdAt;
-  delete techRec.techRecord[0].createdById;
-  delete techRec.techRecord[0].vehicleClass.code;
-  delete techRec.techRecord[0].bodyType.code;
   return techRec.techRecord[0];
 };
 
@@ -55,9 +50,6 @@ describe("payloadValidation", () => {
       it("should pass the validation and return the validated payload for TRL", () => {
         const techRec: any = cloneDeep(mockData[78]);
         delete techRec.techRecord[0].statusCode;
-        delete techRec.techRecord[0].createdByName;
-        delete techRec.techRecord[0].createdAt;
-        delete techRec.techRecord[0].createdById;
         const validatedPayload = validatePayload(techRec.techRecord[0]);
         expect(validatedPayload.value).toBeDefined();
         expect(validatedPayload.error).toEqual(undefined);
@@ -67,9 +59,6 @@ describe("payloadValidation", () => {
       it("should pass the validation and return the validated payload for PSV", () => {
         const techRec: any = cloneDeep(mockData[74]);
         delete techRec.techRecord[0].statusCode;
-        delete techRec.techRecord[0].createdByName;
-        delete techRec.techRecord[0].createdAt;
-        delete techRec.techRecord[0].createdById;
         const validatedPayload = validatePayload(techRec.techRecord[0]);
         expect(validatedPayload.value).toBeDefined();
         expect(validatedPayload.error).toEqual(undefined);
@@ -79,13 +68,37 @@ describe("payloadValidation", () => {
       it("should pass the validation and return the validated payload for HGV", () => {
         const techRec: any = cloneDeep(mockData[43]);
         delete techRec.techRecord[0].statusCode;
-        delete techRec.techRecord[0].createdByName;
-        delete techRec.techRecord[0].createdAt;
-        delete techRec.techRecord[0].createdById;
         const validatedPayload = validatePayload(techRec.techRecord[0]);
         expect(validatedPayload.value).toBeDefined();
         expect(validatedPayload.error).toEqual(undefined);
         expect(validatedPayload.value.vehicleType).toEqual(VEHICLE_TYPE.HGV);
+      });
+
+      it("should pass the validation and return the validated payload for LGV", () => {
+        const techRec: any = cloneDeep(mockData[124]);
+        delete techRec.techRecord[0].statusCode;
+        const validatedPayload = validatePayload(techRec.techRecord[0]);
+        expect(validatedPayload.value).toBeDefined();
+        expect(validatedPayload.error).toEqual(undefined);
+        expect(validatedPayload.value.vehicleType).toEqual(VEHICLE_TYPE.LGV);
+      });
+
+      it("should pass the validation and return the validated payload for CAR", () => {
+        const techRec: any = cloneDeep(mockData[123]);
+        delete techRec.techRecord[0].statusCode;
+        const validatedPayload = validatePayload(techRec.techRecord[0]);
+        expect(validatedPayload.value).toBeDefined();
+        expect(validatedPayload.error).toEqual(undefined);
+        expect(validatedPayload.value.vehicleType).toEqual(VEHICLE_TYPE.CAR);
+      });
+
+      it("should pass the validation and return the validated payload for MOTORCYCLE", () => {
+        const techRec: any = cloneDeep(mockData[122]);
+        delete techRec.techRecord[0].statusCode;
+        const validatedPayload = validatePayload(techRec.techRecord[0]);
+        expect(validatedPayload.value).toBeDefined();
+        expect(validatedPayload.error).toEqual(undefined);
+        expect(validatedPayload.value.vehicleType).toEqual(VEHICLE_TYPE.MOTORCYCLE);
       });
 
       it("should autopopulate the vehicle class code", () => {
@@ -95,6 +108,13 @@ describe("payloadValidation", () => {
           populateFields(payload);
           expect(payload.vehicleClass.code).toEqual(vehicleClassMap[vehicleClass]);
         }
+      });
+
+      it("should not populate vehicle class code if vehicleClass is missing (LGV, CAR, MOTORCYCLE)", () => {
+        const payload: ITechRecord = createPayload();
+        delete payload.vehicleClass;
+        populateFields(payload);
+        expect(payload).not.toHaveProperty("vehicleClass");
       });
 
       it("should autopopulate the body type code", () => {

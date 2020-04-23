@@ -70,8 +70,13 @@ export const populatePartialVin = (vin: string) => {
 };
 
 export const populateFields = (techRecord: ITechRecord) => {
-  techRecord.bodyType.code = populateBodyTypeCode(techRecord.bodyType.description);
-  techRecord.vehicleClass.code = populateVehicleClassCode(techRecord.vehicleClass.description);
+  const {vehicleType} = techRecord;
+  if (vehicleType === VEHICLE_TYPE.PSV || vehicleType === VEHICLE_TYPE.HGV || vehicleType === VEHICLE_TYPE.TRL) {
+    techRecord.bodyType.code = populateBodyTypeCode(techRecord.bodyType.description);
+  }
+  if (techRecord.vehicleClass) {
+    techRecord.vehicleClass.code = populateVehicleClassCode(techRecord.vehicleClass.description);
+  }
   if (techRecord.vehicleType === VEHICLE_TYPE.PSV) {
     techRecord.brakes.brakeCodeOriginal = techRecord.brakes.brakeCode.substring(techRecord.brakes.brakeCode.length - 3);
     techRecord.brakeCode = techRecord.brakes.brakeCode;
