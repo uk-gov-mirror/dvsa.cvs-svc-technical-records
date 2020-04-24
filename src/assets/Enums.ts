@@ -302,3 +302,9 @@ export const VEHICLE_SUBCLASS: string[] = [
     "R",
     "W"
 ];
+
+export enum RECORD_COMPLETENESS_ENUM {
+    COMPLETE ="complete",
+    TESTABLE = "testable",
+    SKELETON = "skeleton"
+}

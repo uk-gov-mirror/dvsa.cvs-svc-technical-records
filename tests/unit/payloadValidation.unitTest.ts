@@ -6,7 +6,13 @@ import {
 } from "../../src/utils/ValidationUtils";
 import ITechRecord from "../../@Types/ITechRecord";
 import {validatePayload} from "../../src/utils/PayloadValidation";
-import {VEHICLE_TYPE, BODY_TYPE_DESCRIPTION, VEHICLE_CLASS_DESCRIPTION} from "../../src/assets/Enums";
+import {
+  VEHICLE_TYPE,
+  BODY_TYPE_DESCRIPTION,
+  VEHICLE_CLASS_DESCRIPTION,
+  RECORD_COMPLETENESS_ENUM
+} from "../../src/assets/Enums";
+import ITechRecordWrapper from "../../@Types/ITechRecordWrapper";
 
 const createPayload = () => {
   const techRec: any = cloneDeep(mockData[74]);
@@ -132,6 +138,18 @@ describe("payloadValidation", () => {
         populateFields(payload);
         expect(payload.brakes.brakeCodeOriginal).toEqual("456");
         expect(payload.brakeCode).toEqual("123456");
+      });
+
+      it("should set recordCompleteness to SKELETON for LGV/CAR/MOTORCYCLE", () => {
+        const motorcycle: any = cloneDeep(mockData[122]);
+        const car: any = cloneDeep(mockData[123]);
+        const lgv: any = cloneDeep(mockData[124]);
+        populateFields(motorcycle.techRecord[0]);
+        populateFields(car.techRecord[0]);
+        populateFields(lgv.techRecord[0]);
+        expect(motorcycle.techRecord[0].recordCompleteness).toEqual(RECORD_COMPLETENESS_ENUM.SKELETON);
+        expect(car.techRecord[0].recordCompleteness).toEqual(RECORD_COMPLETENESS_ENUM.SKELETON);
+        expect(lgv.techRecord[0].recordCompleteness).toEqual(RECORD_COMPLETENESS_ENUM.SKELETON);
       });
     });
 
