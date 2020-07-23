@@ -1,10 +1,10 @@
-import ITechRecord from "../../../@Types/ITechRecord";
-import {VEHICLE_TYPE, SEARCHCRITERIA, ERRORS} from "../../assets/Enums";
+import {ERRORS, SEARCHCRITERIA, VEHICLE_TYPE} from "../../assets/Enums";
 import Joi, {ObjectSchema} from "@hapi/joi";
 import Configuration from "../Configuration";
 import * as fromValidation from "./";
+import {HgvTechRecord, IVehicle, TechRecord, TrlTechRecord} from "../../../@Types/TechRecords";
 
-const checkIfTankOrBattery = (payload: ITechRecord) => {
+export const checkIfTankOrBattery = (payload: HgvTechRecord | TrlTechRecord) => {
   let isTankOrBattery = false;
   if (payload.adrDetails && payload.adrDetails.vehicleDetails && payload.adrDetails.vehicleDetails.type) {
     const vehicleDetailsType = payload.adrDetails.vehicleDetails.type.toLowerCase();
@@ -15,7 +15,7 @@ const checkIfTankOrBattery = (payload: ITechRecord) => {
   return isTankOrBattery;
 };
 
-const featureFlagValidation = (validationSchema: ObjectSchema, payload: ITechRecord, validateEntireRecord: boolean, options: any) => {
+export const featureFlagValidation = (validationSchema: ObjectSchema, payload: HgvTechRecord | TrlTechRecord, validateEntireRecord: boolean, options: any) => {
   const allowAdrUpdatesOnlyFlag: boolean = Configuration.getInstance().getAllowAdrUpdatesOnlyFlag();
   if (allowAdrUpdatesOnlyFlag && !validateEntireRecord) {
     Object.assign(options, {stripUnknown: true});
@@ -26,16 +26,17 @@ const featureFlagValidation = (validationSchema: ObjectSchema, payload: ITechRec
   }
 };
 
-export const validatePayload = (payload: ITechRecord, validateEntireRecord: boolean = true) => {
-  const isTankOrBattery = checkIfTankOrBattery(payload);
+// will be removed
+export const validatePayload = (payload: TechRecord, validateEntireRecord: boolean = true) => {
+  const isTankOrBattery = checkIfTankOrBattery(payload as TrlTechRecord | HgvTechRecord);
   const abortOptions = {abortEarly: false};
   const hgvTrlOptions = {...abortOptions, context: {isTankOrBattery}};
   if (payload.vehicleType === VEHICLE_TYPE.HGV) {
-    return featureFlagValidation(fromValidation.hgvValidation, payload, validateEntireRecord, hgvTrlOptions);
+    return featureFlagValidation(fromValidation.hgvValidation, payload as TrlTechRecord | HgvTechRecord, validateEntireRecord, hgvTrlOptions);
   } else if (payload.vehicleType === VEHICLE_TYPE.PSV) {
     return fromValidation.psvValidation.validate(payload, abortOptions);
   } else if (payload.vehicleType === VEHICLE_TYPE.TRL) {
-    return featureFlagValidation(fromValidation.trlValidation, payload, validateEntireRecord, hgvTrlOptions);
+    return featureFlagValidation(fromValidation.trlValidation, payload as TrlTechRecord | HgvTechRecord, validateEntireRecord, hgvTrlOptions);
   } else if (payload.vehicleType === VEHICLE_TYPE.LGV) {
     return fromValidation.lgvValidation.validate(payload, abortOptions);
   } else if (payload.vehicleType === VEHICLE_TYPE.CAR) {
@@ -49,6 +50,26 @@ export const validatePayload = (payload: ITechRecord, validateEntireRecord: bool
       }
     };
   }
+};
+
+export const validateVrms = (techRecord: IVehicle) => {
+  let areVrmsValid = true;
+  const vehicleType = techRecord.techRecord[0].vehicleType;
+  if (vehicleType !== VEHICLE_TYPE.TRL && !techRecord.primaryVrm) {
+    areVrmsValid = false;
+  } else {
+    const isValid = fromValidation.validatePrimaryVrm.validate(techRecord.primaryVrm);
+    if (isValid.error) {
+      areVrmsValid = false;
+    }
+  }
+  if (techRecord.secondaryVrms) {
+    const isValid = fromValidation.validateSecondaryVrms.validate(techRecord.secondaryVrms);
+    if (isValid.error) {
+      areVrmsValid = false;
+    }
+  }
+  return areVrmsValid;
 };
 
 export const validatePrimaryVrm = Joi.string().min(1).max(9);

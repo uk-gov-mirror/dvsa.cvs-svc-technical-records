@@ -1,5 +1,7 @@
 import ITechRecord from "../../../@Types/ITechRecord";
 import {VEHICLE_TYPE} from "../../assets/Enums";
+import {ValidationError, ValidationResult} from "@hapi/joi";
+import HTTPError from "../../models/HTTPError";
 
 export const populateVehicleClassCode = (description: string) => {
   switch (description) {
@@ -83,3 +85,16 @@ export const populateFields = (techRecord: ITechRecord) => {
   }
 };
 
+export const mapValidationErrors = (validationError: ValidationError) => {
+  return {
+    errors: validationError.details.map((detail: { message: string; }) => {
+      return detail.message;
+    })
+  };
+};
+
+export const checkValidationErrors = (validation: ValidationResult) => {
+  if (validation.error) {
+    throw new HTTPError(400, mapValidationErrors(validation.error));
+  }
+};

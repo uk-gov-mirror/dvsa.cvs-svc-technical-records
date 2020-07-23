@@ -4,25 +4,29 @@ import ITechRecord from "../../@Types/ITechRecord";
 import ITechRecordWrapper from "../../@Types/ITechRecordWrapper";
 import {
   ERRORS,
+  EU_VEHICLE_CATEGORY,
   HTTPRESPONSE,
   SEARCHCRITERIA,
   STATUS,
   UPDATE_TYPE,
-  VEHICLE_TYPE,
-  EU_VEHICLE_CATEGORY
+  VEHICLE_TYPE
 } from "../assets/Enums";
 import * as fromValidation from "../utils/validations";
 import {ISearchCriteria} from "../../@Types/ISearchCriteria";
 import HTTPResponse from "../models/HTTPResponse";
 import {DocumentClient} from "aws-sdk/lib/dynamodb/document_client";
-import QueryOutput = DocumentClient.QueryOutput;
 import {ValidationError, ValidationResult} from "@hapi/joi";
 import {formatErrorMessage} from "../utils/formatErrorMessage";
 import IMsUserDetails from "../../@Types/IUserDetails";
 import {PromiseResult} from "aws-sdk/lib/request";
 import {AWSError} from "aws-sdk/lib/error";
-import {cloneDeep, mergeWith, isArray, isEqual} from "lodash";
+import {cloneDeep, isArray, isEqual, mergeWith} from "lodash";
 import {computeRecordCompleteness} from "../utils/record-completeness/ComputeRecordCompleteness";
+import {HeavyGoodsVehicle} from "../domain/HeavyGoodsVehicle";
+import {IHeavyGoodsVehicle, IVehicle} from "../../@Types/TechRecords";
+import QueryOutput = DocumentClient.QueryOutput;
+import {VehicleFactory} from "../domain/VehicleFactory";
+import {Vehicle} from "../domain/Vehicle";
 
 /**
  * Fetches the entire list of Technical Records from the database.
@@ -155,27 +159,30 @@ class TechRecordsService {
     }
   }
 
-  public async insertTechRecord(techRecord: ITechRecordWrapper, msUserDetails: any) {
-    const isPayloadValid = fromValidation.validatePayload(techRecord.techRecord[0]);
-    this.checkValidationErrors(isPayloadValid);
-    if (!this.validateVrms(techRecord)) {
-      return Promise.reject({statusCode: 400, body: "Primary or secondaryVrms are not valid"});
-    }
-    techRecord.systemNumber = await this.generateSystemNumber();
-    if (techRecord.techRecord[0].vehicleType === VEHICLE_TYPE.TRL) {
-      techRecord.trailerId = await this.setTrailerId();
-    }
-    techRecord.techRecord[0] = isPayloadValid.value;
-    fromValidation.populateFields(techRecord.techRecord[0]);
-    this.setAuditDetailsAndStatusCodeForNewRecord(techRecord.techRecord[0], msUserDetails);
-    techRecord.techRecord[0].recordCompleteness = computeRecordCompleteness(techRecord);
-    return this.techRecordsDAO.createSingle(techRecord)
-      .then((data: any) => {
-        return data;
-      })
-      .catch((error: any) => {
-        throw new HTTPError(error.statusCode, error.message);
-      });
+  public async insertTechRecord(payload: IVehicle, msUserDetails: any) {
+    const validatedVehicle: IVehicle = await VehicleFactory.generateVehicle(payload.techRecord[0].vehicleType as VEHICLE_TYPE, payload);
+    return validatedVehicle;
+
+    // const isPayloadValid = fromValidation.validatePayload(techRecord.techRecord[0]);
+    // this.checkValidationErrors(isPayloadValid);
+    // if (!this.validateVrms(techRecord)) {
+    //   return Promise.reject({statusCode: 400, body: "Primary or secondaryVrms are not valid"});
+    // }
+    // techRecord.systemNumber = await this.generateSystemNumber();
+    // if (techRecord.techRecord[0].vehicleType === VEHICLE_TYPE.TRL) {
+    //   techRecord.trailerId = await this.setTrailerId();
+    // }
+    // techRecord.techRecord[0] = isPayloadValid.value;
+    // fromValidation.populateFields(techRecord.techRecord[0]);
+    // this.setAuditDetailsAndStatusCodeForNewRecord(techRecord.techRecord[0], msUserDetails);
+    // techRecord.techRecord[0].recordCompleteness = computeRecordCompleteness(techRecord);
+    // return this.techRecordsDAO.createSingle(techRecord)
+    //   .then((data: any) => {
+    //     return data;
+    //   })
+    //   .catch((error: any) => {
+    //     throw new HTTPError(error.statusCode, error.message);
+    //   });
   }
 
   public async generateSystemNumber() {
@@ -317,10 +324,10 @@ class TechRecordsService {
     if (oldStatusCode && oldStatusCode === STATUS.CURRENT && statusCode === STATUS.PROVISIONAL) {
       return Promise.reject({statusCode: 400, body: formatErrorMessage(ERRORS.CANNOT_CHANGE_CURRENT_TO_PROVISIONAL)});
     }
-    const isPayloadValid = fromValidation.validatePayload(updatedTechRecord.techRecord[0], false);
-    this.checkValidationErrors(isPayloadValid);
-
-    updatedTechRecord.techRecord[0] = isPayloadValid.value;
+    // const isPayloadValid = fromValidation.validatePayload(updatedTechRecord.techRecord[0], false);
+    // this.checkValidationErrors(isPayloadValid);
+    //
+    // updatedTechRecord.techRecord[0] = isPayloadValid.value;
     return this.getTechRecordsList(updatedTechRecord.systemNumber, STATUS.ALL, SEARCHCRITERIA.SYSTEM_NUMBER)
       .then(async (data: ITechRecordWrapper[]) => {
         if (data.length !== 1) {
@@ -349,7 +356,13 @@ class TechRecordsService {
         techRecToArchive.statusCode = STATUS.ARCHIVED;
         fromValidation.populateFields(newRecord);
         const {systemNumber, vin, primaryVrm, trailerId} = techRecordWithAllStatues;
-        newRecord.recordCompleteness = computeRecordCompleteness({systemNumber, vin, primaryVrm, trailerId, techRecord: [newRecord]});
+        newRecord.recordCompleteness = computeRecordCompleteness({
+          systemNumber,
+          vin,
+          primaryVrm,
+          trailerId,
+          techRecord: [newRecord]
+        });
         techRecordWithAllStatues.techRecord.push(newRecord);
         return techRecordWithAllStatues;
       })
@@ -579,10 +592,10 @@ class TechRecordsService {
     if (techRecordToAdd.techRecord[0].statusCode !== STATUS.PROVISIONAL) {
       return Promise.reject({statusCode: 400, body: ERRORS.STATUS_CODE_SHOULD_BE_PROVISIONAL});
     }
-    const isPayloadValid = fromValidation.validatePayload(techRecordToAdd.techRecord[0]);
-    if (isPayloadValid.error) {
-      return Promise.reject({statusCode: 400, body: isPayloadValid.error.details});
-    }
+    // const isPayloadValid = fromValidation.validatePayload(techRecordToAdd.techRecord[0]);
+    // if (isPayloadValid.error) {
+    //   return Promise.reject({statusCode: 400, body: isPayloadValid.error.details});
+    // }
     return this.getTechRecordsList(techRecordToAdd.systemNumber, STATUS.ALL, SEARCHCRITERIA.SYSTEM_NUMBER)
       .then((data: ITechRecordWrapper[]) => {
         if (data.length !== 1) {
