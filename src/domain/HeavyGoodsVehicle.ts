@@ -1,6 +1,11 @@
 import {Vehicle} from "./Vehicle";
-import {HgvTechRecord, IHeavyGoodsVehicle} from "../../@Types/TechRecords";
-import {checkIfTankOrBattery, featureFlagValidation, hgvValidation} from "../utils/validations";
+import {CarLgvTechRecord, HgvTechRecord, IHeavyGoodsVehicle} from "../../@Types/TechRecords";
+import {
+  checkIfTankOrBattery,
+  featureFlagValidation,
+  hgvValidation, populateBodyTypeCode,
+  populateVehicleClassCode
+} from "../utils/validations";
 import {ValidationResult} from "@hapi/joi";
 
 export class HeavyGoodsVehicle extends Vehicle<IHeavyGoodsVehicle> {
@@ -8,12 +13,12 @@ export class HeavyGoodsVehicle extends Vehicle<IHeavyGoodsVehicle> {
     super(vehicleObj);
   }
 
-  protected create(): IHeavyGoodsVehicle {
+  protected async create(): Promise<IHeavyGoodsVehicle> {
     console.log("HGV create");
     return super.create();
   }
 
-  protected update(): IHeavyGoodsVehicle {
+  protected async update(): Promise<IHeavyGoodsVehicle> {
     return super.update();
   }
 
@@ -23,5 +28,12 @@ export class HeavyGoodsVehicle extends Vehicle<IHeavyGoodsVehicle> {
     console.log("is tank or battery", isTankOrBattery);
     const hgvOptions = {abortEarly: false, context: {isTankOrBattery}};
     return featureFlagValidation(hgvValidation, newVehicle, true, hgvOptions);
+  }
+
+  protected populateFields(techRecord: HgvTechRecord): HgvTechRecord {
+    console.log(`HGV populate fields`);
+    techRecord.bodyType.code = populateBodyTypeCode(techRecord.bodyType.description);
+    techRecord.vehicleClass.code = populateVehicleClassCode(techRecord.vehicleClass.description);
+    return techRecord;
   }
 }

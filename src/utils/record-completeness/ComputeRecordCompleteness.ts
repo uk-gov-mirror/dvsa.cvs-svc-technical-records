@@ -1,9 +1,9 @@
-import ITechRecordWrapper from "../../../@Types/ITechRecordWrapper";
 import HTTPError from "../../models/HTTPError";
 import {ERRORS, RECORD_COMPLETENESS_ENUM, VEHICLE_TYPE} from "../../assets/Enums";
 import * as coreMandatoryValidation from "./CoreMandatoryValidations";
 import {ObjectSchema} from "@hapi/joi";
 import * as nonCoreMandatoryValidation from "./NonCoreMandatoryValidations";
+import {IVehicle} from "../../../@Types/TechRecords";
 
 const validateRecordCompleteness = (validationSchema: ObjectSchema | undefined, techRecordFields: any) => {
   if (validationSchema) {
@@ -21,7 +21,7 @@ const validateVehicleAttributes = (vehicleType: string, vehicleAttributes: any) 
   }
 };
 
-const validateCoreAndNonCoreMandatoryTechRecordAttributes = (vehicleType: string, techRecordWrapper: ITechRecordWrapper) => {
+const validateCoreAndNonCoreMandatoryTechRecordAttributes = (vehicleType: string, techRecordWrapper: IVehicle) => {
   let coreMandatoryValidationResult;
   let nonCoreMandatoryValidationResult;
   let coreMandatorySchema: ObjectSchema;
@@ -51,7 +51,7 @@ const validateCoreAndNonCoreMandatoryTechRecordAttributes = (vehicleType: string
   return {coreMandatoryValidationResult, nonCoreMandatoryValidationResult};
 };
 
-export const computeRecordCompleteness = (techRecordWrapper: ITechRecordWrapper): string => {
+export const computeRecordCompleteness = (techRecordWrapper: IVehicle): string => {
   let recordCompleteness = RECORD_COMPLETENESS_ENUM.COMPLETE;
   let isCoreMandatoryValid = true;
   let isNonCoreMandatoryValid = true;

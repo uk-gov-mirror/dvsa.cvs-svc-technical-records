@@ -37,7 +37,7 @@ const postTechRecords = (event: any) => {
 
   return techRecordsService.insertTechRecord(techRecord, msUserDetails)
     .then((data: IVehicle) => {
-      return new HTTPResponse(201, data);
+      return new HTTPResponse(201, "Technical Record created");
     })
     .catch((error: any) => {
       console.log(error);

@@ -16,10 +16,11 @@ import {LargeGoodsVehicle} from "./LargeGoodsVehicle";
 import {MotorcycleVehicle} from "./MotorcycleVehicle";
 import {Vehicle} from "./Vehicle";
 import {formatErrorMessage} from "../utils/formatErrorMessage";
+import IMsUserDetails from "../../@Types/IUserDetails";
 
 export class VehicleFactory {
 
-  public static async generateVehicle(type: VEHICLE_TYPE, vehicleObj: IVehicle): Promise<IVehicle> {
+  public static async generateVehicle(type: VEHICLE_TYPE, vehicleObj: IVehicle, msUserDetails: IMsUserDetails): Promise<IVehicle> {
     let vehicle: Vehicle<IVehicle>;
     switch (type) {
       case VEHICLE_TYPE.PSV:
@@ -43,6 +44,6 @@ export class VehicleFactory {
       default:
         return Promise.reject({statusCode: 400, body: formatErrorMessage("Invalid vehicle type")});
     }
-    return vehicle.createVehicle();
+    return vehicle.createVehicle(msUserDetails);
   }
 }

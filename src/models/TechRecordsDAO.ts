@@ -6,6 +6,7 @@ import {SEARCHCRITERIA} from "../assets/Enums";
 import {ISearchCriteria} from "../../@Types/ISearchCriteria";
 import {populatePartialVin} from "../utils/validations/ValidationUtils";
 import {LambdaService} from "../services/LambdaService";
+import {IVehicle} from "../../@Types/TechRecords";
 
 const dbConfig = Configuration.getInstance().getDynamoDBConfig();
 /* tslint:disable */
@@ -100,7 +101,7 @@ class TechRecordsDAO {
     return dbClient.query(query).promise();
   }
 
-  public createSingle(techRecord: ITechRecordWrapper) {
+  public createSingle(techRecord: IVehicle) {
     techRecord = capitaliseGeneralVehicleAttributes(techRecord);
     const query = {
       TableName: this.tableName,
@@ -114,7 +115,7 @@ class TechRecordsDAO {
     return dbClient.put(query).promise();
   }
 
-  public updateSingle(techRecord: ITechRecordWrapper) {
+  public updateSingle(techRecord: IVehicle) {
     techRecord.partialVin = populatePartialVin(techRecord.vin);
     techRecord = capitaliseGeneralVehicleAttributes(techRecord);
     const query = {
@@ -252,7 +253,7 @@ const isTrailerId = (searchTerm: string): boolean => {
   return isAllNumbersTrailerId || isLetterAndNumbersTrailerId;
 };
 
-export const capitaliseGeneralVehicleAttributes = (techRecord: ITechRecordWrapper) => {
+export const capitaliseGeneralVehicleAttributes = (techRecord: IVehicle) => {
   techRecord.vin = techRecord.vin?.toUpperCase();
   techRecord.partialVin = techRecord.partialVin?.toUpperCase();
   techRecord.primaryVrm = techRecord.primaryVrm?.toUpperCase();

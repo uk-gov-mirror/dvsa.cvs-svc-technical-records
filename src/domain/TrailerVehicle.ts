@@ -1,27 +1,44 @@
 import {Vehicle} from "./Vehicle";
-import {ITrailerVehicle, TrlTechRecord} from "../../@Types/TechRecords";
-import {checkIfTankOrBattery, featureFlagValidation, trlValidation} from "../utils/validations";
+import {HgvTechRecord, ITrailerVehicle, TrlTechRecord} from "../../@Types/TechRecords";
+import {
+  checkIfTankOrBattery,
+  featureFlagValidation,
+  populateBodyTypeCode,
+  populateVehicleClassCode,
+  trlValidation
+} from "../utils/validations";
 import {ValidationResult} from "@hapi/joi";
+import NumberGenerator from "../handlers/NumberGenerator";
 
 export class TrailerVehicle extends Vehicle<ITrailerVehicle> {
   constructor(vehicleObj: ITrailerVehicle) {
     super(vehicleObj);
   }
 
-  public create(): ITrailerVehicle {
+  public async create(): Promise<ITrailerVehicle> {
     console.log("TRL create");
-    return super.create();
+    const newVehicle: ITrailerVehicle = await super.create();
+    console.log("Generating trailer ID");
+    newVehicle.trailerId = await NumberGenerator.generateTrailerId();
+    return newVehicle;
   }
 
-  public update(): ITrailerVehicle {
+  public async update(): Promise<ITrailerVehicle> {
     return super.update();
   }
 
-  public validateTechRecordFields(newVehicle: TrlTechRecord): ValidationResult {
+  protected validateTechRecordFields(newVehicle: TrlTechRecord): ValidationResult {
     console.log("TRL validate tech record fields");
     const isTankOrBattery: boolean = checkIfTankOrBattery(newVehicle);
     console.log("is tank or battery", isTankOrBattery);
     const trlOptions = {abortEarly: false, context: {isTankOrBattery}};
     return featureFlagValidation(trlValidation, newVehicle, true, trlOptions);
+  }
+
+  protected populateFields(techRecord: TrlTechRecord): TrlTechRecord {
+    console.log(`TRL populate fields`);
+    techRecord.bodyType.code = populateBodyTypeCode(techRecord.bodyType.description);
+    techRecord.vehicleClass.code = populateVehicleClassCode(techRecord.vehicleClass.description);
+    return techRecord;
   }
 }

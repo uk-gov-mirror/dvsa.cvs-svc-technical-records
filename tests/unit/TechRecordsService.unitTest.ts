@@ -2,12 +2,14 @@
 import TechRecordsService from "../../src/services/TechRecordsService";
 import HTTPError from "../../src/models/HTTPError";
 import records from "../resources/technical-records.json";
-import {HTTPRESPONSE, SEARCHCRITERIA, STATUS, EU_VEHICLE_CATEGORY, ERRORS, UPDATE_TYPE} from "../../src/assets/Enums";
+import {ERRORS, EU_VEHICLE_CATEGORY, HTTPRESPONSE, SEARCHCRITERIA, STATUS, UPDATE_TYPE} from "../../src/assets/Enums";
 import ITechRecordWrapper from "../../@Types/ITechRecordWrapper";
 import {cloneDeep} from "lodash";
 import HTTPResponse from "../../src/models/HTTPResponse";
 import Configuration from "../../src/utils/Configuration";
 import IMsUserDetails from "../../@Types/IUserDetails";
+import {IHeavyGoodsVehicle, ITrailerVehicle} from "../../@Types/TechRecords";
+import {NumberGenerator} from "../../src/handlers/NumberGenerator";
 
 const msUserDetails: IMsUserDetails = {
   msUser: "dorel",
@@ -264,379 +266,375 @@ describe("getTechRecordsList", () => {
 
 });
 
-// describe("insertTechRecord", () => {
-//   afterEach(() => {
-//     jest.restoreAllMocks();
-//   });
-//   beforeAll(() => {
-//     Configuration.getInstance().setAllowAdrUpdatesOnlyFlag(false);
-//   });
-//   afterAll(() => {
-//     Configuration.getInstance().setAllowAdrUpdatesOnlyFlag(true);
-//   });
-//   context("when inserting a new technical record", () => {
-//     it("should return 201 Technical Record Created", async () => {
-//       const MockDAO = jest.fn().mockImplementation(() => {
-//         return {
-//           createSingle: () => {
-//             return Promise.resolve({});
-//           },
-//           getSystemNumber: () => Promise.resolve({systemNumber: "10000001", testNumberKey: 3}),
-//           getTrailerId: () => {
-//             return Promise.resolve({
-//               trailerId: "C530001",
-//               trailerLetter: "C",
-//               sequenceNumber: 530001,
-//               testNumberKey: 2
-//             });
-//           }
-//         };
-//       });
-//       const techRecordsService = new TechRecordsService(new MockDAO());
-//
-//       // @ts-ignore
-//       const techRecord: ITechRecordWrapper = cloneDeep(records[78]);
-//       delete techRecord.techRecord[0].statusCode;
-//       delete techRecord.systemNumber;
-//
-//       const data: any = await techRecordsService.insertTechRecord(techRecord, msUserDetails);
-//       expect(data).not.toEqual(undefined);
-//       expect(Object.keys(data).length).toEqual(0);
-//     });
-//   });
-//
-//   context("when trying to create a new technical record with invalid payload", () => {
-//     it("should return validation error 400", async () => {
-//       const MockDAO = jest.fn().mockImplementation(() => {
-//         return {
-//           createSingle: () => {
-//             return Promise.resolve({});
-//           },
-//           getSystemNumber: () => Promise.resolve({systemNumber: "10000001", testNumberKey: 3})
-//         };
-//       });
-//       const techRecordsService = new TechRecordsService(new MockDAO());
-//
-//       // @ts-ignore
-//       const techRecord: ITechRecordWrapper = cloneDeep(records[29]);
-//       techRecord.techRecord[0].bodyType.description = "whatever";
-//       delete techRecord.techRecord[0].statusCode;
-//       delete techRecord.systemNumber;
-//
-//       try {
-//         expect(await techRecordsService.insertTechRecord(techRecord, msUserDetails)).toThrowError();
-//       } catch (errorResponse) {
-//         expect(errorResponse.statusCode).toEqual(400);
-//       }
-//     });
-//
-//     context("and the primaryVRM is missing from the record", () => {
-//       it("should return Primary or secondaryVrms are not valid error 400", async () => {
-//         const MockDAO = jest.fn().mockImplementation(() => {
-//           return {
-//             createSingle: () => {
-//               return Promise.resolve({});
-//             },
-//             getSystemNumber: () => Promise.resolve({systemNumber: "10000001", testNumberKey: 3})
-//           };
-//         });
-//         const techRecordsService = new TechRecordsService(new MockDAO());
-//
-//         // @ts-ignore
-//         const techRecord: ITechRecordWrapper = cloneDeep(records[43]);
-//         techRecord.secondaryVrms = ["invalidSecondaryVrm"];
-//         techRecord.techRecord[0].bodyType.description = "skeletal";
-//         delete techRecord.techRecord[0].statusCode;
-//         delete techRecord.primaryVrm;
-//         delete techRecord.systemNumber;
-//
-//         try {
-//           expect(await techRecordsService.insertTechRecord(techRecord, msUserDetails)).toThrowError();
-//         } catch (errorResponse) {
-//           expect(errorResponse.statusCode).toEqual(400);
-//           expect(errorResponse.body).toEqual("Primary or secondaryVrms are not valid");
-//         }
-//       });
-//     });
-//
-//     context("and the primaryVrm and secondaryVrms are not valid", () => {
-//       it("should return Primary or secondaryVrms are not valid error 400", async () => {
-//         const MockDAO = jest.fn().mockImplementation(() => {
-//           return {
-//             createSingle: () => {
-//               return Promise.resolve({});
-//             },
-//             getSystemNumber: () => Promise.resolve({systemNumber: "10000001", testNumberKey: 3})
-//           };
-//         });
-//         const techRecordsService = new TechRecordsService(new MockDAO());
-//
-//         // @ts-ignore
-//         const techRecord: ITechRecordWrapper = cloneDeep(records[43]);
-//         techRecord.primaryVrm = "invalidPrimaryVrm";
-//         techRecord.secondaryVrms = ["invalidSecondaryVrm"];
-//         techRecord.techRecord[0].bodyType.description = "skeletal";
-//         delete techRecord.techRecord[0].statusCode;
-//         delete techRecord.systemNumber;
-//
-//         try {
-//           expect(await techRecordsService.insertTechRecord(techRecord, msUserDetails)).toThrowError();
-//         } catch (errorResponse) {
-//           expect(errorResponse.statusCode).toEqual(400);
-//           expect(errorResponse.body).toEqual("Primary or secondaryVrms are not valid");
-//         }
-//       });
-//     });
-//   });
-//
-//   context("when trying to create a technical record for existing vehicle", () => {
-//     it("should return error 400 The conditional request failed", async () => {
-//       const MockDAO = jest.fn().mockImplementation(() => {
-//         return {
-//           createSingle: () => {
-//             return Promise.reject({statusCode: 400, message: "The conditional request failed"});
-//           },
-//           getSystemNumber: () => Promise.resolve({systemNumber: "10000001", testNumberKey: 3})
-//         };
-//       });
-//       const techRecordsService = new TechRecordsService(new MockDAO());
-//
-//       // @ts-ignore
-//       const techRecord: ITechRecordWrapper = cloneDeep(records[43]);
-//       delete techRecord.techRecord[0].statusCode;
-//       delete techRecord.systemNumber;
-//       try {
-//         expect(await techRecordsService.insertTechRecord(techRecord, {})).toThrowError();
-//       } catch (errorResponse) {
-//         expect(errorResponse).toBeInstanceOf(HTTPError);
-//         expect(errorResponse.statusCode).toEqual(400);
-//         expect(errorResponse.body).toEqual("The conditional request failed");
-//       }
-//     });
-//   });
-//
-//   context("when trying to create a new trailer", () => {
-//     context("and the trailer id generation is successfull", () => {
-//       it("should set the correct trailerId on the vehicle", async () => {
-//         const MockDAO = jest.fn().mockImplementation(() => {
-//           return {
-//             getTrailerId: () => {
-//               return Promise.resolve({
-//                 trailerId: "C530001",
-//                 trailerLetter: "C",
-//                 sequenceNumber: 530001,
-//                 testNumberKey: 2
-//               });
-//             }
-//           };
-//         });
-//         const techRecordsService = new TechRecordsService(new MockDAO());
-//
-//         // @ts-ignore
-//         const techRecord: ITechRecordWrapper = cloneDeep(records[78]);
-//         delete techRecord.trailerId;
-//         delete techRecord.techRecord[0].statusCode;
-//
-//         expect(await techRecordsService.setTrailerId()).toEqual("C530001");
-//       });
-//     });
-//     context("and the trailer id generation failed", () => {
-//       context("and the trailer id object doesn't contain the trailerId attribute", () => {
-//         it("should return error 500 TrailerId generation failed", async () => {
-//           const MockDAO = jest.fn().mockImplementation(() => {
-//             return {
-//               getTrailerId: () => {
-//                 return Promise.resolve({
-//                   trailerLetter: "C",
-//                   sequenceNumber: 530001,
-//                   testNumberKey: 2
-//                 });
-//               }
-//             };
-//           });
-//           const techRecordsService = new TechRecordsService(new MockDAO());
-//
-//           // @ts-ignore
-//           const techRecord: ITechRecordWrapper = cloneDeep(records[78]);
-//           delete techRecord.trailerId;
-//           delete techRecord.techRecord[0].statusCode;
-//
-//           try {
-//             expect(await techRecordsService.setTrailerId()).toThrowError();
-//           } catch (errorResponse) {
-//             expect(errorResponse.statusCode).toEqual(500);
-//             expect(errorResponse.body).toEqual(ERRORS.TRAILER_ID_GENERATION_FAILED);
-//           }
-//         });
-//       });
-//
-//       context("and the trailer id object contains the error attribute", () => {
-//         it("should return error 500 TrailerId generation failed", async () => {
-//           const MockDAO = jest.fn().mockImplementation(() => {
-//             return {
-//               getTrailerId: () => {
-//                 return Promise.resolve({
-//                   error: "Some error from test-number microservice"
-//                 });
-//               }
-//             };
-//           });
-//           const techRecordsService = new TechRecordsService(new MockDAO());
-//
-//           // @ts-ignore
-//           const techRecord: ITechRecordWrapper = cloneDeep(records[78]);
-//           delete techRecord.trailerId;
-//           delete techRecord.techRecord[0].statusCode;
-//
-//           try {
-//             expect(await techRecordsService.setTrailerId()).toThrowError();
-//           } catch (errorResponse) {
-//             expect(errorResponse.statusCode).toEqual(500);
-//             expect(errorResponse.body).toEqual("Some error from test-number microservice");
-//           }
-//         });
-//       });
-//
-//       context("and the test-number microservice returned an error", () => {
-//         it("should return error 500", async () => {
-//           const MockDAO = jest.fn().mockImplementation(() => {
-//             return {
-//               getTrailerId: () => {
-//                 return Promise.reject("Error from test-number microservice");
-//               }
-//             };
-//           });
-//           const techRecordsService = new TechRecordsService(new MockDAO());
-//
-//           // @ts-ignore
-//           const techRecord: ITechRecordWrapper = cloneDeep(records[78]);
-//           delete techRecord.trailerId;
-//           delete techRecord.techRecord[0].statusCode;
-//
-//           try {
-//             expect(await techRecordsService.setTrailerId()).toThrowError();
-//           } catch (errorResponse) {
-//             expect(errorResponse.statusCode).toEqual(500);
-//             expect(errorResponse.body).toEqual("Error from test-number microservice");
-//           }
-//         });
-//       });
-//     });
-//   });
-//
-//   context("when trying to create a new vehicle", () => {
-//     context("and the system number generation is successfull", () => {
-//       it("should set the correct system number on the vehicle", async () => {
-//         const MockDAO = jest.fn().mockImplementation(() => {
-//           return {
-//             getSystemNumber: () => {
-//               return Promise.resolve({
-//                 systemNumber: "10001111",
-//                 testNumberKey: 3
-//               });
-//             }
-//           };
-//         });
-//         const mockDAO = new MockDAO();
-//         const techRecordsService = new TechRecordsService(mockDAO);
-//
-//         // @ts-ignore
-//         const techRecord: ITechRecordWrapper = cloneDeep(records[78]);
-//         techRecord.vin = Date.now().toString();
-//         delete techRecord.trailerId;
-//         delete techRecord.techRecord[0].statusCode;
-//
-//         expect(await techRecordsService.generateSystemNumber()).toEqual("10001111");
-//       });
-//     });
-//     context("and the system number generation failed", () => {
-//       context("and the system number object doesn't contain the systemNumber attribute", () => {
-//         it("should return error 500 System Number generation failed", async () => {
-//           const MockDAO = jest.fn().mockImplementation(() => {
-//             return {
-//               getSystemNumber: () => {
-//                 return Promise.resolve({
-//                   testNumberKey: 3
-//                 });
-//               }
-//             };
-//           });
-//           const mockDAO = new MockDAO();
-//           const techRecordsService = new TechRecordsService(mockDAO);
-//
-//           // @ts-ignore
-//           const techRecord: ITechRecordWrapper = cloneDeep(records[78]);
-//           techRecord.vin = Date.now().toString();
-//           delete techRecord.trailerId;
-//           delete techRecord.techRecord[0].statusCode;
-//
-//           try {
-//             expect(await techRecordsService.generateSystemNumber()).toThrowError();
-//           } catch (errorResponse) {
-//             expect(errorResponse.statusCode).toEqual(500);
-//             expect(errorResponse.body).toEqual(ERRORS.SYSTEM_NUMBER_GENERATION_FAILED);
-//           }
-//         });
-//       });
-//
-//       context("and the system number object contains the error attribute", () => {
-//         it("should return error 500 System Number generation failed", async () => {
-//           const MockDAO = jest.fn().mockImplementation(() => {
-//             return {
-//               getSystemNumber: () => {
-//                 return Promise.resolve({
-//                   error: "Some error from test-number microservice"
-//                 });
-//               }
-//             };
-//           });
-//           const mockDAO = new MockDAO();
-//           const techRecordsService = new TechRecordsService(mockDAO);
-//
-//           // @ts-ignore
-//           const techRecord: ITechRecordWrapper = cloneDeep(records[78]);
-//           techRecord.vin = Date.now().toString();
-//           delete techRecord.trailerId;
-//           delete techRecord.techRecord[0].statusCode;
-//
-//           try {
-//             expect(await techRecordsService.generateSystemNumber()).toThrowError();
-//           } catch (errorResponse) {
-//             expect(errorResponse.statusCode).toEqual(500);
-//             expect(errorResponse.body).toEqual("Some error from test-number microservice");
-//           }
-//         });
-//       });
-//
-//       context("and the test-number microservice returned an error", () => {
-//         it("should return error 500", async () => {
-//           const MockDAO = jest.fn().mockImplementation(() => {
-//             return {
-//               getSystemNumber: () => {
-//                 return Promise.reject("Error from test-number microservice");
-//               }
-//             };
-//           });
-//           const mockDAO = new MockDAO();
-//           const techRecordsService = new TechRecordsService(mockDAO);
-//
-//           // @ts-ignore
-//           const techRecord: ITechRecordWrapper = cloneDeep(records[78]);
-//           techRecord.vin = Date.now().toString();
-//           delete techRecord.trailerId;
-//           delete techRecord.techRecord[0].statusCode;
-//
-//           try {
-//             expect(await techRecordsService.generateSystemNumber()).toThrowError();
-//           } catch (errorResponse) {
-//             expect(errorResponse.statusCode).toEqual(500);
-//             expect(errorResponse.body).toEqual("Error from test-number microservice");
-//           }
-//         });
-//       });
-//     });
-//   });
-// });
+describe("insertTechRecord", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+  beforeAll(() => {
+    Configuration.getInstance().setAllowAdrUpdatesOnlyFlag(false);
+  });
+  afterAll(() => {
+    Configuration.getInstance().setAllowAdrUpdatesOnlyFlag(true);
+  });
+  context("when inserting a new technical record", () => {
+    it("should return 201 Technical Record Created", async () => {
+      const MockDAO = jest.fn().mockImplementation(() => {
+        return {
+          createSingle: () => {
+            return Promise.resolve({});
+          },
+          getSystemNumber: () => Promise.resolve({systemNumber: "10000001", testNumberKey: 3}),
+          getTrailerId: () => {
+            return Promise.resolve({
+              trailerId: "C530001",
+              trailerLetter: "C",
+              sequenceNumber: 530001,
+              testNumberKey: 2
+            });
+          }
+        };
+      });
+      const techRecordsService = new TechRecordsService(new MockDAO());
+
+      // @ts-ignore
+      const techRecord: ITrailerVehicle = cloneDeep(records[78]);
+      delete techRecord.techRecord[0].statusCode;
+      delete techRecord.systemNumber;
+
+      const data: any = await techRecordsService.insertTechRecord(techRecord, msUserDetails);
+      expect(data).not.toEqual(undefined);
+      expect(Object.keys(data).length).toEqual(0);
+    });
+  });
+
+  context("when trying to create a new technical record with invalid payload", () => {
+    it("should return validation error 400", async () => {
+      const MockDAO = jest.fn().mockImplementation(() => {
+        return {
+          createSingle: () => {
+            return Promise.resolve({});
+          },
+          getSystemNumber: () => Promise.resolve({systemNumber: "10000001", testNumberKey: 3})
+        };
+      });
+      const techRecordsService = new TechRecordsService(new MockDAO());
+
+      // @ts-ignore
+      const techRecord: ITrailerVehicle = cloneDeep(records[29]);
+      techRecord.techRecord[0].bodyType.description = "whatever";
+      delete techRecord.techRecord[0].statusCode;
+      delete techRecord.systemNumber;
+
+      try {
+        expect(await techRecordsService.insertTechRecord(techRecord, msUserDetails)).toThrowError();
+      } catch (errorResponse) {
+        expect(errorResponse.statusCode).toEqual(400);
+      }
+    });
+
+    context("and the primaryVRM is missing from the record", () => {
+      it("should return Primary or secondaryVrms are not valid error 400", async () => {
+        const MockDAO = jest.fn().mockImplementation(() => {
+          return {
+            createSingle: () => {
+              return Promise.resolve({});
+            },
+            getSystemNumber: () => Promise.resolve({systemNumber: "10000001", testNumberKey: 3})
+          };
+        });
+        const techRecordsService = new TechRecordsService(new MockDAO());
+
+        // @ts-ignore
+        const techRecord: IHeavyGoodsVehicle = cloneDeep(records[43]);
+        techRecord.secondaryVrms = ["invalidSecondaryVrm"];
+        techRecord.techRecord[0].bodyType.description = "skeletal";
+        delete techRecord.techRecord[0].statusCode;
+        delete techRecord.primaryVrm;
+        delete techRecord.systemNumber;
+
+        try {
+          expect(await techRecordsService.insertTechRecord(techRecord, msUserDetails)).toThrowError();
+        } catch (errorResponse) {
+          expect(errorResponse.statusCode).toEqual(400);
+          expect(errorResponse.body.errors).toContain("Primary or secondaryVrms are not valid");
+        }
+      });
+    });
+
+    context("and the primaryVrm and secondaryVrms are not valid", () => {
+      it("should return Primary or secondaryVrms are not valid error 400", async () => {
+        const MockDAO = jest.fn().mockImplementation(() => {
+          return {
+            createSingle: () => {
+              return Promise.resolve({});
+            },
+            getSystemNumber: () => Promise.resolve({systemNumber: "10000001", testNumberKey: 3})
+          };
+        });
+        const techRecordsService = new TechRecordsService(new MockDAO());
+
+        // @ts-ignore
+        const techRecord: IHeavyGoodsVehicle = cloneDeep(records[43]);
+        techRecord.primaryVrm = "invalidPrimaryVrm";
+        techRecord.secondaryVrms = ["invalidSecondaryVrm"];
+        techRecord.techRecord[0].bodyType.description = "skeletal";
+        delete techRecord.techRecord[0].statusCode;
+        delete techRecord.systemNumber;
+
+        try {
+          expect(await techRecordsService.insertTechRecord(techRecord, msUserDetails)).toThrowError();
+        } catch (errorResponse) {
+          expect(errorResponse.statusCode).toEqual(400);
+          expect(errorResponse.body.errors).toContain("Primary or secondaryVrms are not valid");
+        }
+      });
+    });
+  });
+
+  context("when trying to create a technical record for existing vehicle", () => {
+    it("should return error 400 The conditional request failed", async () => {
+      const MockDAO = jest.fn().mockImplementation(() => {
+        return {
+          createSingle: () => {
+            return Promise.reject({statusCode: 400, message: "The conditional request failed"});
+          },
+          getSystemNumber: () => Promise.resolve({systemNumber: "10000001", testNumberKey: 3})
+        };
+      });
+      const techRecordsService = new TechRecordsService(new MockDAO());
+
+      // @ts-ignore
+      const techRecord: IHeavyGoodsVehicle = cloneDeep(records[43]);
+      delete techRecord.techRecord[0].statusCode;
+      delete techRecord.systemNumber;
+      try {
+        expect(await techRecordsService.insertTechRecord(techRecord, msUserDetails)).toThrowError();
+      } catch (errorResponse) {
+        expect(errorResponse).toBeInstanceOf(HTTPError);
+        expect(errorResponse.statusCode).toEqual(400);
+        expect(errorResponse.body).toEqual("The conditional request failed");
+      }
+    });
+  });
+
+  context("when trying to create a new trailer", () => {
+    context("and the trailer id generation is successfull", () => {
+      it("should set the correct trailerId on the vehicle", async () => {
+        const MockDAO = jest.fn().mockImplementation(() => {
+          return {
+            getTrailerId: () => {
+              return Promise.resolve({
+                trailerId: "C530001",
+                trailerLetter: "C",
+                sequenceNumber: 530001,
+                testNumberKey: 2
+              });
+            }
+          };
+        });
+        const numberGenerator = new NumberGenerator(new MockDAO());
+
+        // @ts-ignore
+        const techRecord: ITrailerVehicle = cloneDeep(records[78]);
+        delete techRecord.trailerId;
+        delete techRecord.techRecord[0].statusCode;
+
+        expect(await numberGenerator.generateTrailerId()).toEqual("C530001");
+      });
+    });
+    context("and the trailer id generation failed", () => {
+      context("and the trailer id object doesn't contain the trailerId attribute", () => {
+        it("should return error 500 TrailerId generation failed", async () => {
+          const MockDAO = jest.fn().mockImplementation(() => {
+            return {
+              getTrailerId: () => {
+                return Promise.resolve({
+                  trailerLetter: "C",
+                  sequenceNumber: 530001,
+                  testNumberKey: 2
+                });
+              }
+            };
+          });
+          const numberGenerator = new NumberGenerator(new MockDAO());
+
+          // @ts-ignore
+          const techRecord: ITrailerVehicle = cloneDeep(records[78]);
+          delete techRecord.trailerId;
+          delete techRecord.techRecord[0].statusCode;
+
+          try {
+            expect(await numberGenerator.generateTrailerId()).toThrowError();
+          } catch (errorResponse) {
+            expect(errorResponse.statusCode).toEqual(500);
+            expect(errorResponse.body).toEqual(ERRORS.TRAILER_ID_GENERATION_FAILED);
+          }
+        });
+      });
+
+      context("and the trailer id object contains the error attribute", () => {
+        it("should return error 500 TrailerId generation failed", async () => {
+          const MockDAO = jest.fn().mockImplementation(() => {
+            return {
+              getTrailerId: () => {
+                return Promise.resolve({
+                  error: "Some error from test-number microservice"
+                });
+              }
+            };
+          });
+          const numberGenerator = new NumberGenerator(new MockDAO());
+
+          // @ts-ignore
+          const techRecord: ITechRecordWrapper = cloneDeep(records[78]);
+          delete techRecord.trailerId;
+          delete techRecord.techRecord[0].statusCode;
+
+          try {
+            expect(await numberGenerator.generateTrailerId()).toThrowError();
+          } catch (errorResponse) {
+            expect(errorResponse.statusCode).toEqual(500);
+            expect(errorResponse.body).toEqual("Some error from test-number microservice");
+          }
+        });
+      });
+
+      context("and the test-number microservice returned an error", () => {
+        it("should return error 500", async () => {
+          const MockDAO = jest.fn().mockImplementation(() => {
+            return {
+              getTrailerId: () => {
+                return Promise.reject("Error from test-number microservice");
+              }
+            };
+          });
+          const numberGenerator = new NumberGenerator(new MockDAO());
+
+          // @ts-ignore
+          const techRecord: ITechRecordWrapper = cloneDeep(records[78]);
+          delete techRecord.trailerId;
+          delete techRecord.techRecord[0].statusCode;
+
+          try {
+            expect(await numberGenerator.generateTrailerId()).toThrowError();
+          } catch (errorResponse) {
+            expect(errorResponse.statusCode).toEqual(500);
+            expect(errorResponse.body).toEqual("Error from test-number microservice");
+          }
+        });
+      });
+    });
+  });
+
+  context("when trying to create a new vehicle", () => {
+    context("and the system number generation is successfull", () => {
+      it("should set the correct system number on the vehicle", async () => {
+        const MockDAO = jest.fn().mockImplementation(() => {
+          return {
+            getSystemNumber: () => {
+              return Promise.resolve({
+                systemNumber: "10001111",
+                testNumberKey: 3
+              });
+            }
+          };
+        });
+        const numberGenerator = new NumberGenerator(new MockDAO());
+
+        // @ts-ignore
+        const techRecord: ITechRecordWrapper = cloneDeep(records[78]);
+        techRecord.vin = Date.now().toString();
+        delete techRecord.trailerId;
+        delete techRecord.techRecord[0].statusCode;
+
+        expect(await numberGenerator.generateSystemNumber()).toEqual("10001111");
+      });
+    });
+    context("and the system number generation failed", () => {
+      context("and the system number object doesn't contain the systemNumber attribute", () => {
+        it("should return error 500 System Number generation failed", async () => {
+          const MockDAO = jest.fn().mockImplementation(() => {
+            return {
+              getSystemNumber: () => {
+                return Promise.resolve({
+                  testNumberKey: 3
+                });
+              }
+            };
+          });
+          const numberGenerator = new NumberGenerator(new MockDAO());
+
+          // @ts-ignore
+          const techRecord: ITechRecordWrapper = cloneDeep(records[78]);
+          techRecord.vin = Date.now().toString();
+          delete techRecord.trailerId;
+          delete techRecord.techRecord[0].statusCode;
+
+          try {
+            expect(await numberGenerator.generateSystemNumber()).toThrowError();
+          } catch (errorResponse) {
+            expect(errorResponse.statusCode).toEqual(500);
+            expect(errorResponse.body).toEqual(ERRORS.SYSTEM_NUMBER_GENERATION_FAILED);
+          }
+        });
+      });
+
+      context("and the system number object contains the error attribute", () => {
+        it("should return error 500 System Number generation failed", async () => {
+          const MockDAO = jest.fn().mockImplementation(() => {
+            return {
+              getSystemNumber: () => {
+                return Promise.resolve({
+                  error: "Some error from test-number microservice"
+                });
+              }
+            };
+          });
+          const numberGenerator = new NumberGenerator(new MockDAO());
+
+          // @ts-ignore
+          const techRecord: ITechRecordWrapper = cloneDeep(records[78]);
+          techRecord.vin = Date.now().toString();
+          delete techRecord.trailerId;
+          delete techRecord.techRecord[0].statusCode;
+
+          try {
+            expect(await numberGenerator.generateSystemNumber()).toThrowError();
+          } catch (errorResponse) {
+            expect(errorResponse.statusCode).toEqual(500);
+            expect(errorResponse.body).toEqual("Some error from test-number microservice");
+          }
+        });
+      });
+
+      context("and the test-number microservice returned an error", () => {
+        it("should return error 500", async () => {
+          const MockDAO = jest.fn().mockImplementation(() => {
+            return {
+              getSystemNumber: () => {
+                return Promise.reject("Error from test-number microservice");
+              }
+            };
+          });
+          const numberGenerator = new NumberGenerator(new MockDAO());
+
+          // @ts-ignore
+          const techRecord: ITechRecordWrapper = cloneDeep(records[78]);
+          techRecord.vin = Date.now().toString();
+          delete techRecord.trailerId;
+          delete techRecord.techRecord[0].statusCode;
+
+          try {
+            expect(await numberGenerator.generateSystemNumber()).toThrowError();
+          } catch (errorResponse) {
+            expect(errorResponse.statusCode).toEqual(500);
+            expect(errorResponse.body).toEqual("Error from test-number microservice");
+          }
+        });
+      });
+    });
+  });
+});
 
 describe("updateTechRecord", () => {
   afterEach(() => {

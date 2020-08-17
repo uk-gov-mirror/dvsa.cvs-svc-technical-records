@@ -22,6 +22,7 @@ export interface TechRecord {
   lastUpdatedAt: string;
   lastUpdatedByName: string;
   lastUpdatedById: string;
+  updateType?: string;
   statusCode: string;
 }
 

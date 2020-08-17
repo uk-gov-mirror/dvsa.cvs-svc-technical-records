@@ -1,6 +1,6 @@
 import {Vehicle} from "./Vehicle";
-import {IPublicServiceVehicle, PsvTechRecord} from "../../@Types/TechRecords";
-import {psvValidation} from "../utils/validations";
+import {HgvTechRecord, IPublicServiceVehicle, PsvTechRecord} from "../../@Types/TechRecords";
+import {populateBodyTypeCode, populateVehicleClassCode, psvValidation} from "../utils/validations";
 import {ValidationResult} from "@hapi/joi";
 
 export class PublicServiceVehicle extends Vehicle<IPublicServiceVehicle> {
@@ -8,12 +8,12 @@ export class PublicServiceVehicle extends Vehicle<IPublicServiceVehicle> {
     super(vehicleObj);
   }
 
-  protected create(): IPublicServiceVehicle {
+  protected async create(): Promise<IPublicServiceVehicle> {
     console.log("PSV create");
     return super.create();
   }
 
-  protected update(): IPublicServiceVehicle {
+  protected async update(): Promise<IPublicServiceVehicle> {
     return super.update();
   }
 
@@ -21,5 +21,14 @@ export class PublicServiceVehicle extends Vehicle<IPublicServiceVehicle> {
     console.log("PSV validate tech record fields");
     const options = {abortEarly: false};
     return psvValidation.validate(newVehicle, options);
+  }
+
+  protected populateFields(techRecord: PsvTechRecord): PsvTechRecord {
+    console.log(`PSV populate fields`);
+    techRecord.bodyType.code = populateBodyTypeCode(techRecord.bodyType.description);
+    techRecord.vehicleClass.code = populateVehicleClassCode(techRecord.vehicleClass.description);
+    techRecord.brakes.brakeCodeOriginal = techRecord.brakes.brakeCode.substring(techRecord.brakes.brakeCode.length - 3);
+    techRecord.brakeCode = techRecord.brakes.brakeCode;
+    return techRecord;
   }
 }

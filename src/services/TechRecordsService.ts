@@ -23,7 +23,7 @@ import {AWSError} from "aws-sdk/lib/error";
 import {cloneDeep, isArray, isEqual, mergeWith} from "lodash";
 import {computeRecordCompleteness} from "../utils/record-completeness/ComputeRecordCompleteness";
 import {HeavyGoodsVehicle} from "../domain/HeavyGoodsVehicle";
-import {IHeavyGoodsVehicle, IVehicle} from "../../@Types/TechRecords";
+import {IHeavyGoodsVehicle, IVehicle, TechRecord} from "../../@Types/TechRecords";
 import QueryOutput = DocumentClient.QueryOutput;
 import {VehicleFactory} from "../domain/VehicleFactory";
 import {Vehicle} from "../domain/Vehicle";
@@ -159,9 +159,8 @@ class TechRecordsService {
     }
   }
 
-  public async insertTechRecord(payload: IVehicle, msUserDetails: any) {
-    const validatedVehicle: IVehicle = await VehicleFactory.generateVehicle(payload.techRecord[0].vehicleType as VEHICLE_TYPE, payload);
-    return validatedVehicle;
+  public async insertTechRecord<NewVehicle extends IVehicle>(payload: NewVehicle, msUserDetails: IMsUserDetails) {
+    const validatedVehicle: IVehicle = await VehicleFactory.generateVehicle(payload.techRecord[0].vehicleType as VEHICLE_TYPE, payload, msUserDetails);
 
     // const isPayloadValid = fromValidation.validatePayload(techRecord.techRecord[0]);
     // this.checkValidationErrors(isPayloadValid);
@@ -170,77 +169,78 @@ class TechRecordsService {
     // }
     // techRecord.systemNumber = await this.generateSystemNumber();
     // if (techRecord.techRecord[0].vehicleType === VEHICLE_TYPE.TRL) {
-    //   techRecord.trailerId = await this.setTrailerId();
+    //   techRecord.trailerId = await this.generateTrailerId();
     // }
     // techRecord.techRecord[0] = isPayloadValid.value;
     // fromValidation.populateFields(techRecord.techRecord[0]);
     // this.setAuditDetailsAndStatusCodeForNewRecord(techRecord.techRecord[0], msUserDetails);
     // techRecord.techRecord[0].recordCompleteness = computeRecordCompleteness(techRecord);
-    // return this.techRecordsDAO.createSingle(techRecord)
-    //   .then((data: any) => {
-    //     return data;
-    //   })
-    //   .catch((error: any) => {
-    //     throw new HTTPError(error.statusCode, error.message);
-    //   });
+
+    return this.techRecordsDAO.createSingle(validatedVehicle)
+      .then((data: any) => {
+        return data;
+      })
+      .catch((error: any) => {
+        throw new HTTPError(error.statusCode, error.message);
+      });
   }
 
-  public async generateSystemNumber() {
-    try {
-      const systemNumberObj = await this.techRecordsDAO.getSystemNumber();
-      if (systemNumberObj.error) {
-        return Promise.reject({statusCode: 500, body: systemNumberObj.error});
-      }
-      if (!systemNumberObj.systemNumber) {
-        return Promise.reject({statusCode: 500, body: ERRORS.SYSTEM_NUMBER_GENERATION_FAILED});
-      }
-      return systemNumberObj.systemNumber;
-    } catch (error) {
-      return Promise.reject({statusCode: 500, body: error});
-    }
-  }
+  // public async generateSystemNumber() {
+  //   try {
+  //     const systemNumberObj = await this.techRecordsDAO.getSystemNumber();
+  //     if (systemNumberObj.error) {
+  //       return Promise.reject({statusCode: 500, body: systemNumberObj.error});
+  //     }
+  //     if (!systemNumberObj.systemNumber) {
+  //       return Promise.reject({statusCode: 500, body: ERRORS.SYSTEM_NUMBER_GENERATION_FAILED});
+  //     }
+  //     return systemNumberObj.systemNumber;
+  //   } catch (error) {
+  //     return Promise.reject({statusCode: 500, body: error});
+  //   }
+  // }
 
-  public async setTrailerId() {
-    try {
-      const trailerIdObj = await this.techRecordsDAO.getTrailerId();
-      if (trailerIdObj.error) {
-        return Promise.reject({statusCode: 500, body: trailerIdObj.error});
-      }
-      if (!trailerIdObj.trailerId) {
-        return Promise.reject({statusCode: 500, body: ERRORS.TRAILER_ID_GENERATION_FAILED});
-      }
-      return trailerIdObj.trailerId;
-    } catch (error) {
-      return Promise.reject({statusCode: 500, body: error});
-    }
-  }
+  // public async generateTrailerId() {
+  //   try {
+  //     const trailerIdObj = await this.techRecordsDAO.getTrailerId();
+  //     if (trailerIdObj.error) {
+  //       return Promise.reject({statusCode: 500, body: trailerIdObj.error});
+  //     }
+  //     if (!trailerIdObj.trailerId) {
+  //       return Promise.reject({statusCode: 500, body: ERRORS.TRAILER_ID_GENERATION_FAILED});
+  //     }
+  //     return trailerIdObj.trailerId;
+  //   } catch (error) {
+  //     return Promise.reject({statusCode: 500, body: error});
+  //   }
+  // }
 
-  private validateVrms(techRecord: ITechRecordWrapper) {
-    let areVrmsValid = true;
-    const vehicleType = techRecord.techRecord[0].vehicleType;
-    if (vehicleType !== VEHICLE_TYPE.TRL && !techRecord.primaryVrm) {
-      areVrmsValid = false;
-    } else {
-      const isValid = fromValidation.validatePrimaryVrm.validate(techRecord.primaryVrm);
-      if (isValid.error) {
-        areVrmsValid = false;
-      }
-    }
-    if (techRecord.secondaryVrms) {
-      const isValid = fromValidation.validateSecondaryVrms.validate(techRecord.secondaryVrms);
-      if (isValid.error) {
-        areVrmsValid = false;
-      }
-    }
-    return areVrmsValid;
-  }
+  // private validateVrms(techRecord: ITechRecordWrapper) {
+  //   let areVrmsValid = true;
+  //   const vehicleType = techRecord.techRecord[0].vehicleType;
+  //   if (vehicleType !== VEHICLE_TYPE.TRL && !techRecord.primaryVrm) {
+  //     areVrmsValid = false;
+  //   } else {
+  //     const isValid = fromValidation.validatePrimaryVrm.validate(techRecord.primaryVrm);
+  //     if (isValid.error) {
+  //       areVrmsValid = false;
+  //     }
+  //   }
+  //   if (techRecord.secondaryVrms) {
+  //     const isValid = fromValidation.validateSecondaryVrms.validate(techRecord.secondaryVrms);
+  //     if (isValid.error) {
+  //       areVrmsValid = false;
+  //     }
+  //   }
+  //   return areVrmsValid;
+  // }
 
-  private setAuditDetailsAndStatusCodeForNewRecord(techRecord: ITechRecord, msUserDetails: any) {
-    techRecord.createdAt = new Date().toISOString();
-    techRecord.createdByName = msUserDetails.msUser;
-    techRecord.createdById = msUserDetails.msOid;
-    techRecord.statusCode = STATUS.PROVISIONAL;
-  }
+  // private setAuditDetailsAndStatusCodeForNewRecord(techRecord: ITechRecord, msUserDetails: any) {
+  //   techRecord.createdAt = new Date().toISOString();
+  //   techRecord.createdByName = msUserDetails.msUser;
+  //   techRecord.createdById = msUserDetails.msOid;
+  //   techRecord.statusCode = STATUS.PROVISIONAL;
+  // }
 
   public updateTechRecord(techRecord: ITechRecordWrapper, msUserDetails: IMsUserDetails, oldStatusCode?: STATUS) {
     return this.manageUpdateLogic(techRecord, msUserDetails, oldStatusCode);
@@ -249,7 +249,7 @@ class TechRecordsService {
   private manageUpdateLogic(updatedTechRecord: ITechRecordWrapper, msUserDetails: IMsUserDetails, oldStatusCode: STATUS | undefined) {
     return this.createAndArchiveTechRecord(updatedTechRecord, msUserDetails, oldStatusCode)
       .then((data: ITechRecordWrapper) => {
-        return this.techRecordsDAO.updateSingle(data)
+        return this.techRecordsDAO.updateSingle(data as IVehicle)
           .then((updatedData: any) => {
             return this.formatTechRecordItemForResponse(updatedData.Attributes);
           })
@@ -324,10 +324,10 @@ class TechRecordsService {
     if (oldStatusCode && oldStatusCode === STATUS.CURRENT && statusCode === STATUS.PROVISIONAL) {
       return Promise.reject({statusCode: 400, body: formatErrorMessage(ERRORS.CANNOT_CHANGE_CURRENT_TO_PROVISIONAL)});
     }
-    // const isPayloadValid = fromValidation.validatePayload(updatedTechRecord.techRecord[0], false);
-    // this.checkValidationErrors(isPayloadValid);
-    //
-    // updatedTechRecord.techRecord[0] = isPayloadValid.value;
+    const isPayloadValid = fromValidation.validatePayload(updatedTechRecord.techRecord[0] as TechRecord, false);
+    this.checkValidationErrors(isPayloadValid);
+
+    updatedTechRecord.techRecord[0] = isPayloadValid.value;
     return this.getTechRecordsList(updatedTechRecord.systemNumber, STATUS.ALL, SEARCHCRITERIA.SYSTEM_NUMBER)
       .then(async (data: ITechRecordWrapper[]) => {
         if (data.length !== 1) {
@@ -361,7 +361,7 @@ class TechRecordsService {
           vin,
           primaryVrm,
           trailerId,
-          techRecord: [newRecord]
+          techRecord: [newRecord as TechRecord]
         });
         techRecordWithAllStatues.techRecord.push(newRecord);
         return techRecordWithAllStatues;
@@ -493,7 +493,7 @@ class TechRecordsService {
     const uniqueRecord = await this.prepareTechRecordForStatusUpdate(systemNumber, newStatus, createdById, createdByName);
     let updatedTechRecord;
     try {
-      updatedTechRecord = await this.techRecordsDAO.updateSingle(uniqueRecord);
+      updatedTechRecord = await this.techRecordsDAO.updateSingle(uniqueRecord as IVehicle);
     } catch (error) {
       throw new HTTPError(500, HTTPRESPONSE.INTERNAL_SERVER_ERROR);
     }
@@ -522,7 +522,7 @@ class TechRecordsService {
 
     let updatedTechRecord;
     try {
-      updatedTechRecord = await this.techRecordsDAO.updateSingle(techRecordWithAllStatues);
+      updatedTechRecord = await this.techRecordsDAO.updateSingle(techRecordWithAllStatues as IVehicle);
     } catch (error) {
       throw new HTTPError(error.statusCode, error.message);
     }
@@ -565,7 +565,7 @@ class TechRecordsService {
     techRecordWrapper.techRecord.push(newTechRecord);
     let updatedTechRecord;
     try {
-      updatedTechRecord = await this.techRecordsDAO.updateSingle(techRecordWrapper);
+      updatedTechRecord = await this.techRecordsDAO.updateSingle(techRecordWrapper as IVehicle);
     } catch (error) {
       throw new HTTPError(500, HTTPRESPONSE.INTERNAL_SERVER_ERROR);
     }
@@ -575,7 +575,7 @@ class TechRecordsService {
   public addProvisionalTechRecord(techRecord: ITechRecordWrapper, msUserDetails: IMsUserDetails) {
     return this.addNewProvisionalRecord(techRecord, msUserDetails)
       .then((data: ITechRecordWrapper) => {
-        return this.techRecordsDAO.updateSingle(data)
+        return this.techRecordsDAO.updateSingle(data as IVehicle)
           .then((updatedData: PromiseResult<DocumentClient.UpdateItemOutput, AWSError>) => {
             return this.formatTechRecordItemForResponse({...updatedData.Attributes} as ITechRecordWrapper);
           })

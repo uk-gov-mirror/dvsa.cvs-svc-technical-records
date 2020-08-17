@@ -1,6 +1,6 @@
 import {Vehicle} from "./Vehicle";
 import {IMotorcycleVehicle, MotorcycleTechRecord} from "../../@Types/TechRecords";
-import {motorcycleValidation} from "../utils/validations";
+import {motorcycleValidation, populateVehicleClassCode} from "../utils/validations";
 import {ValidationResult} from "@hapi/joi";
 
 export class MotorcycleVehicle extends Vehicle<IMotorcycleVehicle> {
@@ -8,12 +8,12 @@ export class MotorcycleVehicle extends Vehicle<IMotorcycleVehicle> {
     super(vehicleObj);
   }
 
-  protected create(): IMotorcycleVehicle {
+  protected async create(): Promise<IMotorcycleVehicle> {
     console.log("MOTO create");
     return super.create();
   }
 
-  protected update(): IMotorcycleVehicle {
+  protected async update(): Promise<IMotorcycleVehicle> {
     return super.update();
   }
 
@@ -21,5 +21,11 @@ export class MotorcycleVehicle extends Vehicle<IMotorcycleVehicle> {
     console.log("MOTO validate tech record fields");
     const options = {abortEarly: false};
     return motorcycleValidation.validate(newVehicle, options);
+  }
+
+  protected populateFields(techRecord: MotorcycleTechRecord): MotorcycleTechRecord {
+    console.log(`MOTO populate fields`);
+    techRecord.vehicleClass.code = populateVehicleClassCode(techRecord.vehicleClass.description);
+    return techRecord;
   }
 }

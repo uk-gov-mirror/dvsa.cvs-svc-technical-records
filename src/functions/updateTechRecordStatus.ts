@@ -6,7 +6,7 @@ import {STATUS, HTTPRESPONSE} from "../assets/Enums";
 export async function updateTechRecordStatus(event: any) {
     const techRecordsService = new TechRecordsService(new TechRecordsDAO());
 
-    const systemNumber: string = event.pathParameters!.systemNumber;
+    const systemNumber: string = event.pathParameters.systemNumber;
     const testStatus: string = event.queryStringParameters!.testStatus;
     const testResult: string = event.queryStringParameters!.testResult;
     const testTypeId: string = event.queryStringParameters!.testTypeId;

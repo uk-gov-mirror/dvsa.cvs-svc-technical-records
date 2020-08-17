@@ -8,7 +8,7 @@ import {formatErrorMessage} from "../utils/formatErrorMessage";
 export async function archiveTechRecordStatus(event: any) {
   const techRecordsService = new TechRecordsService(new TechRecordsDAO());
 
-  const systemNumber: string = event.pathParameters!.systemNumber;
+  const systemNumber: string = event.pathParameters.systemNumber;
   const techRec = event.body && event.body.techRecord;
   const msUserDetails = event.body && event.body.msUserDetails ? event.body.msUserDetails : null;
 
