@@ -39,5 +39,3 @@ export class NumberGenerator {
     }
   }
 }
-
-export default new NumberGenerator(new TechRecordsDAO());

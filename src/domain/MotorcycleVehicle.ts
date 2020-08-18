@@ -2,10 +2,11 @@ import {Vehicle} from "./Vehicle";
 import {IMotorcycleVehicle, MotorcycleTechRecord} from "../../@Types/TechRecords";
 import {motorcycleValidation, populateVehicleClassCode} from "../utils/validations";
 import {ValidationResult} from "@hapi/joi";
+import {NumberGenerator} from "../handlers/NumberGenerator";
 
 export class MotorcycleVehicle extends Vehicle<IMotorcycleVehicle> {
-  constructor(vehicleObj: IMotorcycleVehicle) {
-    super(vehicleObj);
+  constructor(vehicleObj: IMotorcycleVehicle, numberGenerator: NumberGenerator) {
+    super(vehicleObj, numberGenerator);
   }
 
   protected async create(): Promise<IMotorcycleVehicle> {

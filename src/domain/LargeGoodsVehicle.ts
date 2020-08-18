@@ -2,10 +2,11 @@ import {Vehicle} from "./Vehicle";
 import {CarLgvTechRecord, ILargeGoodsVehicle} from "../../@Types/TechRecords";
 import {lgvValidation, populateVehicleClassCode} from "../utils/validations";
 import {ValidationResult} from "@hapi/joi";
+import {NumberGenerator} from "../handlers/NumberGenerator";
 
 export class LargeGoodsVehicle extends Vehicle<ILargeGoodsVehicle> {
-  constructor(vehicleObj: ILargeGoodsVehicle) {
-    super(vehicleObj);
+  constructor(vehicleObj: ILargeGoodsVehicle, numberGenerator: NumberGenerator) {
+    super(vehicleObj, numberGenerator);
   }
 
   protected async create(): Promise<ILargeGoodsVehicle> {

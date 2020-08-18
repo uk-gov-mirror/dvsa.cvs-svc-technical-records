@@ -27,6 +27,8 @@ import {IHeavyGoodsVehicle, IVehicle, TechRecord} from "../../@Types/TechRecords
 import QueryOutput = DocumentClient.QueryOutput;
 import {VehicleFactory} from "../domain/VehicleFactory";
 import {Vehicle} from "../domain/Vehicle";
+import {NumberGenerator} from "../handlers/NumberGenerator";
+import AuditDetailsHandler from "../handlers/AuditDetailsHandler";
 
 /**
  * Fetches the entire list of Technical Records from the database.
@@ -34,10 +36,12 @@ import {Vehicle} from "../domain/Vehicle";
  */
 
 class TechRecordsService {
-  private techRecordsDAO: TechRecordsDAO;
+  private readonly techRecordsDAO: TechRecordsDAO;
+  private readonly numberGenerator: NumberGenerator;
 
   constructor(techRecordsDAO: TechRecordsDAO) {
     this.techRecordsDAO = techRecordsDAO;
+    this.numberGenerator = new NumberGenerator(this.techRecordsDAO);
   }
 
   public getTechRecordsList(searchTerm: string, status: string, searchCriteria: ISearchCriteria = SEARCHCRITERIA.ALL): Promise<ITechRecordWrapper[]> {
@@ -160,7 +164,7 @@ class TechRecordsService {
   }
 
   public async insertTechRecord<NewVehicle extends IVehicle>(payload: NewVehicle, msUserDetails: IMsUserDetails) {
-    const validatedVehicle: IVehicle = await VehicleFactory.generateVehicle(payload.techRecord[0].vehicleType as VEHICLE_TYPE, payload, msUserDetails);
+    const validatedVehicle: IVehicle = await VehicleFactory.generateVehicle(payload.techRecord[0].vehicleType as VEHICLE_TYPE, payload, msUserDetails, this.numberGenerator);
 
     // const isPayloadValid = fromValidation.validatePayload(techRecord.techRecord[0]);
     // this.checkValidationErrors(isPayloadValid);
@@ -352,7 +356,7 @@ class TechRecordsService {
         if (oldStatusCode) {
           newRecord.statusCode = statusCode;
         }
-        this.setAuditDetails(newRecord, techRecToArchive, msUserDetails);
+        AuditDetailsHandler.setAuditDetails(newRecord, techRecToArchive, msUserDetails);
         techRecToArchive.statusCode = STATUS.ARCHIVED;
         fromValidation.populateFields(newRecord);
         const {systemNumber, vin, primaryVrm, trailerId} = techRecordWithAllStatues;
@@ -388,25 +392,25 @@ class TechRecordsService {
     }
   }
 
-  private setAuditDetails(newTechRecord: ITechRecord, oldTechRecord: ITechRecord, msUserDetails: IMsUserDetails) {
-    const date = new Date().toISOString();
-    newTechRecord.createdAt = date;
-    newTechRecord.createdByName = msUserDetails.msUser;
-    newTechRecord.createdById = msUserDetails.msOid;
-    delete newTechRecord.lastUpdatedAt;
-    delete newTechRecord.lastUpdatedById;
-    delete newTechRecord.lastUpdatedByName;
-
-    oldTechRecord.lastUpdatedAt = date;
-    oldTechRecord.lastUpdatedByName = msUserDetails.msUser;
-    oldTechRecord.lastUpdatedById = msUserDetails.msOid;
-
-    let updateType = UPDATE_TYPE.TECH_RECORD_UPDATE;
-    if (newTechRecord.adrDetails || oldTechRecord.adrDetails) {
-      updateType = isEqual(newTechRecord.adrDetails, oldTechRecord.adrDetails) ? UPDATE_TYPE.TECH_RECORD_UPDATE : UPDATE_TYPE.ADR;
-    }
-    oldTechRecord.updateType = updateType;
-  }
+  // private setAuditDetails(newTechRecord: ITechRecord, oldTechRecord: ITechRecord, msUserDetails: IMsUserDetails) {
+  //   const date = new Date().toISOString();
+  //   newTechRecord.createdAt = date;
+  //   newTechRecord.createdByName = msUserDetails.msUser;
+  //   newTechRecord.createdById = msUserDetails.msOid;
+  //   delete newTechRecord.lastUpdatedAt;
+  //   delete newTechRecord.lastUpdatedById;
+  //   delete newTechRecord.lastUpdatedByName;
+  //
+  //   oldTechRecord.lastUpdatedAt = date;
+  //   oldTechRecord.lastUpdatedByName = msUserDetails.msUser;
+  //   oldTechRecord.lastUpdatedById = msUserDetails.msOid;
+  //
+  //   let updateType = UPDATE_TYPE.TECH_RECORD_UPDATE;
+  //   if (newTechRecord.adrDetails || oldTechRecord.adrDetails) {
+  //     updateType = isEqual(newTechRecord.adrDetails, oldTechRecord.adrDetails) ? UPDATE_TYPE.TECH_RECORD_UPDATE : UPDATE_TYPE.ADR;
+  //   }
+  //   oldTechRecord.updateType = updateType;
+  // }
 
   public insertTechRecordsList(techRecordItems: ITechRecordWrapper[]) {
     return this.techRecordsDAO.createMultiple(techRecordItems)
@@ -434,20 +438,20 @@ class TechRecordsService {
       });
   }
 
-  public setCreatedAuditDetails(techRecord: ITechRecord, createdByName: string, createdById: string, date: string) {
-    techRecord.createdAt = date;
-    techRecord.createdByName = createdByName;
-    techRecord.createdById = createdById;
-    delete techRecord.lastUpdatedAt;
-    delete techRecord.lastUpdatedById;
-    delete techRecord.lastUpdatedByName;
-  }
-
-  public setLastUpdatedAuditDetails(techRecord: ITechRecord, createdByName: string, createdById: string, date: string) {
-    techRecord.lastUpdatedAt = date;
-    techRecord.lastUpdatedByName = createdByName;
-    techRecord.lastUpdatedById = createdById;
-  }
+  // public setCreatedAuditDetails(techRecord: ITechRecord, createdByName: string, createdById: string, date: string) {
+  //   techRecord.createdAt = date;
+  //   techRecord.createdByName = createdByName;
+  //   techRecord.createdById = createdById;
+  //   delete techRecord.lastUpdatedAt;
+  //   delete techRecord.lastUpdatedById;
+  //   delete techRecord.lastUpdatedByName;
+  // }
+  //
+  // public setLastUpdatedAuditDetails(techRecord: ITechRecord, createdByName: string, createdById: string, date: string) {
+  //   techRecord.lastUpdatedAt = date;
+  //   techRecord.lastUpdatedByName = createdByName;
+  //   techRecord.lastUpdatedById = createdById;
+  // }
 
   public async prepareTechRecordForStatusUpdate(systemNumber: string, newStatus: STATUS = STATUS.CURRENT, createdById: string, createdByName: string) {
     const techRecordWrapper: ITechRecordWrapper[] = await this.getTechRecordsList(systemNumber, STATUS.ALL, SEARCHCRITERIA.SYSTEM_NUMBER);
@@ -465,8 +469,8 @@ class TechRecordsService {
       newTechRecord.statusCode = newStatus;
 
       const date = new Date().toISOString();
-      this.setCreatedAuditDetails(newTechRecord, createdByName, createdById, date);
-      this.setLastUpdatedAuditDetails(provisionalTechRecords[0], createdByName, createdById, date);
+      AuditDetailsHandler.setCreatedAuditDetails(newTechRecord as TechRecord, createdByName, createdById, date);
+      AuditDetailsHandler.setLastUpdatedAuditDetails(provisionalTechRecords[0] as TechRecord, createdByName, createdById, date);
       provisionalTechRecords[0].updateType = UPDATE_TYPE.TECH_RECORD_UPDATE;
     }
     if (currentTechRecords.length === 1) {
@@ -475,9 +479,9 @@ class TechRecordsService {
       if (!newTechRecord) {
         newTechRecord = cloneDeep(currentTechRecords[0]);
         newTechRecord.statusCode = newStatus;
-        this.setCreatedAuditDetails(newTechRecord, createdByName, createdById, date);
+        AuditDetailsHandler.setCreatedAuditDetails(newTechRecord as TechRecord, createdByName, createdById, date);
       }
-      this.setLastUpdatedAuditDetails(currentTechRecords[0], createdByName, createdById, date);
+      AuditDetailsHandler.setLastUpdatedAuditDetails(currentTechRecords[0] as TechRecord, createdByName, createdById, date);
       currentTechRecords[0].updateType = UPDATE_TYPE.TECH_RECORD_UPDATE;
     }
 

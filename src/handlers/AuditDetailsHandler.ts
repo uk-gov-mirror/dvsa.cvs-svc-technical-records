@@ -6,7 +6,7 @@ import ITechRecord from "../../@Types/ITechRecord";
 
 class AuditDetailsHandler {
 
-  private setAuditDetails(newTechRecord: ITechRecord, oldTechRecord: ITechRecord, msUserDetails: IMsUserDetails) {
+  public setAuditDetails(newTechRecord: ITechRecord, oldTechRecord: ITechRecord, msUserDetails: IMsUserDetails) {
     const date = new Date().toISOString();
     newTechRecord.createdAt = date;
     newTechRecord.createdByName = msUserDetails.msUser;

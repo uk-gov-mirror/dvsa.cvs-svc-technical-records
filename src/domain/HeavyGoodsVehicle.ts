@@ -1,16 +1,18 @@
 import {Vehicle} from "./Vehicle";
-import {CarLgvTechRecord, HgvTechRecord, IHeavyGoodsVehicle} from "../../@Types/TechRecords";
+import {HgvTechRecord, IHeavyGoodsVehicle} from "../../@Types/TechRecords";
 import {
   checkIfTankOrBattery,
   featureFlagValidation,
-  hgvValidation, populateBodyTypeCode,
+  hgvValidation,
+  populateBodyTypeCode,
   populateVehicleClassCode
 } from "../utils/validations";
 import {ValidationResult} from "@hapi/joi";
+import {NumberGenerator} from "../handlers/NumberGenerator";
 
 export class HeavyGoodsVehicle extends Vehicle<IHeavyGoodsVehicle> {
-  constructor(vehicleObj: IHeavyGoodsVehicle) {
-    super(vehicleObj);
+  constructor(vehicleObj: IHeavyGoodsVehicle, numberGenerator: NumberGenerator) {
+    super(vehicleObj, numberGenerator);
   }
 
   protected async create(): Promise<IHeavyGoodsVehicle> {

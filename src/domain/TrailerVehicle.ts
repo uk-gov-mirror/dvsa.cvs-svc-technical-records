@@ -1,5 +1,5 @@
 import {Vehicle} from "./Vehicle";
-import {HgvTechRecord, ITrailerVehicle, TrlTechRecord} from "../../@Types/TechRecords";
+import {ITrailerVehicle, TrlTechRecord} from "../../@Types/TechRecords";
 import {
   checkIfTankOrBattery,
   featureFlagValidation,
@@ -8,22 +8,22 @@ import {
   trlValidation
 } from "../utils/validations";
 import {ValidationResult} from "@hapi/joi";
-import NumberGenerator from "../handlers/NumberGenerator";
+import {NumberGenerator} from "../handlers/NumberGenerator";
 
 export class TrailerVehicle extends Vehicle<ITrailerVehicle> {
-  constructor(vehicleObj: ITrailerVehicle) {
-    super(vehicleObj);
+  constructor(vehicleObj: ITrailerVehicle, numberGenerator: NumberGenerator) {
+    super(vehicleObj, numberGenerator);
   }
 
-  public async create(): Promise<ITrailerVehicle> {
+  protected async create(): Promise<ITrailerVehicle> {
     console.log("TRL create");
     const newVehicle: ITrailerVehicle = await super.create();
     console.log("Generating trailer ID");
-    newVehicle.trailerId = await NumberGenerator.generateTrailerId();
+    newVehicle.trailerId = await this.getNumberGenerator().generateTrailerId();
     return newVehicle;
   }
 
-  public async update(): Promise<ITrailerVehicle> {
+  protected async update(): Promise<ITrailerVehicle> {
     return super.update();
   }
 

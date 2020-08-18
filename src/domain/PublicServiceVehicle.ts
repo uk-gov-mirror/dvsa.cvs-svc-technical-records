@@ -1,11 +1,12 @@
 import {Vehicle} from "./Vehicle";
-import {HgvTechRecord, IPublicServiceVehicle, PsvTechRecord} from "../../@Types/TechRecords";
+import {IPublicServiceVehicle, PsvTechRecord} from "../../@Types/TechRecords";
 import {populateBodyTypeCode, populateVehicleClassCode, psvValidation} from "../utils/validations";
 import {ValidationResult} from "@hapi/joi";
+import {NumberGenerator} from "../handlers/NumberGenerator";
 
 export class PublicServiceVehicle extends Vehicle<IPublicServiceVehicle> {
-  constructor(vehicleObj: IPublicServiceVehicle) {
-    super(vehicleObj);
+  constructor(vehicleObj: IPublicServiceVehicle, numberGenerator: NumberGenerator) {
+    super(vehicleObj, numberGenerator);
   }
 
   protected async create(): Promise<IPublicServiceVehicle> {
