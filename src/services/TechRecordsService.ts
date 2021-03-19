@@ -59,23 +59,33 @@ class TechRecordsService {
     payload: Vehicle,
     msUserDetails: IMsUserDetails
   ) {
+    try {
     const vehicle = VehicleFactory.generateVehicleInstance(
       payload,
       this.techRecordsDAO
     );
     return vehicle.createVehicle(msUserDetails);
+    } catch(error) {
+      console.error(error);
+      throw new HTTPError(error.statusCode, error.body);
+    }
   }
 
-  public updateTechRecord(
+  public async updateTechRecord(
     techRecord: Vehicle,
     msUserDetails: IMsUserDetails,
     oldStatusCode?: STATUS
   ) {
-    const vehicle = VehicleFactory.generateVehicleInstance(
-      techRecord,
-      this.techRecordsDAO
-    );
-    return vehicle.updateVehicle(msUserDetails, oldStatusCode);
+    try {
+      const vehicle = VehicleFactory.generateVehicleInstance(
+        techRecord,
+        this.techRecordsDAO
+      );
+      return await vehicle.updateVehicle(msUserDetails, oldStatusCode);
+    } catch (error) {
+      console.error(error);
+      throw new HTTPError(error.statusCode, error.body);
+    }
   }
 
   public async updateTechRecordStatusCode(
@@ -90,11 +100,16 @@ class TechRecordsService {
       createdById,
       createdByName
     );
-    const vehicle = VehicleFactory.generateVehicleInstance(
+    try {
+      const vehicle = VehicleFactory.generateVehicleInstance(
       uniqueRecord,
       this.techRecordsDAO
     );
-    return vehicle.updateTechRecordStatusCode(uniqueRecord);
+      return vehicle.updateTechRecordStatusCode(uniqueRecord);
+   } catch(error) {
+    console.error(error);
+    throw new HTTPError(error.statusCode, error.body);
+   }
   }
 
   public async archiveTechRecordStatus(

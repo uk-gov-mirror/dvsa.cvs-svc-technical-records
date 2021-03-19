@@ -4,7 +4,7 @@ import HTTPResponse from "../models/HTTPResponse";
 import {formatErrorMessage} from "../utils/formatErrorMessage";
 import {ERRORS, STATUS} from "../assets/Enums";
 
-const updateTechRecords = (event: any) => {
+const updateTechRecords = async (event: any) => {
   const techRecordsDAO = new TechRecordsDAO();
   const techRecordsService = new TechRecordsService(techRecordsDAO);
 
@@ -35,14 +35,13 @@ const updateTechRecords = (event: any) => {
     trailerId: event.body.trailerId,
     techRecord: techRec
   };
-  return techRecordsService.updateTechRecord(techRecord, msUserDetails, oldStatusCode)
-    .then((updatedTechRec: any) => {
-      return new HTTPResponse(200, updatedTechRec);
-    })
-    .catch((error: any) => {
-      console.error(error);
-      return new HTTPResponse(error.statusCode, error.body);
-    });
+  try {
+    const updatedTechRec = await techRecordsService.updateTechRecord(techRecord, msUserDetails, oldStatusCode);
+    return new HTTPResponse(200, updatedTechRec);
+  } catch (error) {
+    console.error(error);
+    return new HTTPResponse(error.statusCode, error.body);
+  }
 };
 
 export {updateTechRecords};

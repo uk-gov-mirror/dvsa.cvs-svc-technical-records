@@ -411,12 +411,17 @@ describe("techRecords", () => {
             it("should return error status 400 Body is not a valid TechRecord", async () => {
               // @ts-ignore
               const techRec: ITechRecordWrapper = cloneDeep(mockData[1]);
-              techRec.techRecord = [];
-              const res = await request.put(`vehicles/${techRec.vin}`).send(techRec);
+              techRec.techRecord[0].vehicleType = "somethingWrong";
+              const payload = {
+                msUserDetails,
+                techRecord: techRec.techRecord
+              };
+              const res = await request.put(`vehicles/${techRec.vin}`).send(payload);
               expect(res.status).toEqual(400);
               expect(res.header["access-control-allow-origin"]).toEqual("*");
               expect(res.header["access-control-allow-credentials"]).toEqual("true");
-              expect(res.body.errors).toContain("Body is not a valid TechRecord");
+              console.log(res.body);
+              expect(res.body.errors).toContain("\"vehicleType\" must be one of [hgv, psv, trl, car, lgv, motorcycle]");
             });
           });
         });
