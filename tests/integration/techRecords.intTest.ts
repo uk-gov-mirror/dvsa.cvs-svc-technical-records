@@ -370,9 +370,11 @@ describe("techRecords", () => {
           context("and that vehicle does exist", () => {
             it("should return status 200 and the updated vehicle", async () => {
               // @ts-ignore
-              const techRec: ITechRecordWrapper = cloneDeep(mockData[43]);
+              const techRec: ITechRecordWrapper = cloneDeep(mockData[130]);
+              const primaryVrm = "ZYAG/ \\*-";
               const payload = {
                 msUserDetails,
+                primaryVrm,
                 techRecord: techRec.techRecord
               };
               const res = await request.put(`vehicles/${techRec.systemNumber}`).send(payload);

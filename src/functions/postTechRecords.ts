@@ -4,7 +4,7 @@ import HTTPResponse from "../models/HTTPResponse";
 import {populatePartialVin} from "../utils/validations/ValidationUtils";
 import { HTTPRESPONSE } from "../assets/Enums";
 
-const postTechRecords = (event: any) => {
+const postTechRecords = async (event: any) => {
   const techRecordsDAO = new TechRecordsDAO();
   const techRecordsService = new TechRecordsService(techRecordsDAO);
 
@@ -35,14 +35,14 @@ const postTechRecords = (event: any) => {
     secondaryVrms
   };
 
-  return techRecordsService.insertTechRecord(techRecord, msUserDetails)
-    .then((data) => {
-      return new HTTPResponse(201, HTTPRESPONSE.TECHINICAL_RECORD_CREATED);
-    })
-    .catch((error: any) => {
-      console.log(error);
-      return new HTTPResponse(error.statusCode, error.body);
-    });
+  try {
+    console.log("inside post Tech Record function");
+    const data = await techRecordsService.insertTechRecord(techRecord, msUserDetails);
+    return new HTTPResponse(201, HTTPRESPONSE.TECHINICAL_RECORD_CREATED);
+  } catch (error) {
+    console.log(error);
+    return new HTTPResponse(error.statusCode, error.body);
+  }
 };
 
 export {postTechRecords};

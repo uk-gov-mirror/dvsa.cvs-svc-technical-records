@@ -58,24 +58,19 @@ export abstract class VehicleProcessor<T extends Vehicle> {
    * @param existingVehicle The existing tech record
    * @param updatedVehicle The updated tech record
    */
-  protected updateVehicleIdentifiers(updatedVehicle: T, existingVehicle: T) {
-    const { primaryVrm, secondaryVrms } = updatedVehicle;
-    if (secondaryVrms) {
-      existingVehicle.secondaryVrms = secondaryVrms;
-    }
+  protected updateVehicleIdentifiers(existingVehicle: T, updatedVehicle: T): T {
+    const { primaryVrm } = updatedVehicle;
+    updatedVehicle.secondaryVrms = existingVehicle.secondaryVrms;
     if (primaryVrm && existingVehicle.primaryVrm !== primaryVrm) {
       const previousVrm = existingVehicle.primaryVrm;
       if (previousVrm) {
-        existingVehicle.secondaryVrms = existingVehicle.secondaryVrms
-          ? existingVehicle.secondaryVrms
-          : [];
-        existingVehicle.secondaryVrms.push(previousVrm);
+        updatedVehicle.secondaryVrms?.push(previousVrm);
       }
-      existingVehicle.primaryVrm = primaryVrm;
       updatedVehicle.techRecord[0].reasonForCreation =
         `VRM updated from ${previousVrm} to ${primaryVrm}. ` +
         updatedVehicle.techRecord[0].reasonForCreation;
     }
+    return updatedVehicle;
   }
 
   /**
@@ -281,8 +276,6 @@ export abstract class VehicleProcessor<T extends Vehicle> {
       );
     }
     if (nonArchivedTechRecord.length === 0) {
-
-      
       throw this.Error(400, enums.ERRORS.CANNOT_UPDATE_ARCHIVED_RECORD);
     }
     if (nonArchivedTechRecord[0].euVehicleCategory) {
@@ -371,12 +364,17 @@ export abstract class VehicleProcessor<T extends Vehicle> {
         msUserDetails
       );
 
-      this.updateVehicleIdentifiers(
+      updatedVehicle = this.updateVehicleIdentifiers(
         techRecordWithAllStatuses,
         updatedVehicle
       );
+      techRecordWithAllStatuses.primaryVrm = updatedVehicle.primaryVrm;
+      techRecordWithAllStatuses.secondaryVrms = updatedVehicle.secondaryVrms;
 
-      this.capitaliseGeneralVehicleAttributes(updatedVehicle);
+      console.log("updated identifiers");
+      console.log(updatedVehicle);
+
+      updatedVehicle = this.capitaliseGeneralVehicleAttributes(updatedVehicle);
 
       const newRecord: TechRecord = cloneDeep(techRecToArchive);
       mergeWith(
@@ -429,7 +427,7 @@ export abstract class VehicleProcessor<T extends Vehicle> {
                           );
     errors = errors.concat(this.validateTechRecordFields(newVehicle.techRecord[0], isCreate));
     if (errors && errors.length) {
-      console.error(errors);
+      // console.error(errors);
       throw this.Error(400, errors);
     }
     return newVehicle.techRecord[0];

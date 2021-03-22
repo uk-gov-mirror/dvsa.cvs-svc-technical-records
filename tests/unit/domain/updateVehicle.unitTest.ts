@@ -160,10 +160,10 @@ describe("VehicleProcessor", () => {
               context(
                 "and the primaryVrm is not present on another vehicle",
                 () => {
-                  it("should set the new primaryVrm on the vehicle and update reason for creation", async () => {
+                  it("should set the new primaryVrm on the vehicle and update reason for creation", () => {
                     // @ts-ignore
                     const techRecord: HeavyGoodsVehicle = cloneDeep(
-                      mockData[43]
+                      mockData[130]
                     );
                     // techRecord.vrms = [{isPrimary: true, vrm: "LKJH654"}];
                     const MockDAO = jest.fn().mockImplementation(() => {
@@ -178,7 +178,7 @@ describe("VehicleProcessor", () => {
                       };
                     });
                     // @ts-ignore
-                    const payload: HeavyGoodsVehicle = cloneDeep(mockData[43]);
+                    const payload: HeavyGoodsVehicle = cloneDeep(mockData[130]);
                     const hgvProcessor = new HgvProcessor(
                       payload,
                       new MockDAO()
@@ -186,22 +186,22 @@ describe("VehicleProcessor", () => {
                     payload.techRecord[0].reasonForCreation = "Updated VRM";
                     payload.primaryVrm = "ABCD943";
                     // @ts-ignore
-                    await hgvProcessor.updateVehicleIdentifiers(
-                      payload,
-                      techRecord
+                    const updatedVehicle =  hgvProcessor.updateVehicleIdentifiers(
+                      techRecord,
+                      payload
                     );
-                    expect(techRecord.primaryVrm).toEqual("ABCD943");
-                    expect(techRecord.secondaryVrms!.length).toEqual(2);
-                    expect(techRecord.secondaryVrms).toContain("LKJH654");
-                    expect(payload.techRecord[0].reasonForCreation).toEqual(
-                      `VRM updated from LKJH654 to ABCD943. Updated VRM`
+                    expect(updatedVehicle.primaryVrm).toEqual("ABCD943");
+                    expect(updatedVehicle.secondaryVrms?.length).toEqual(2);
+                    expect(updatedVehicle.secondaryVrms).toContain("LYAX/ \\*-");
+                    expect(updatedVehicle.techRecord[0].reasonForCreation).toEqual(
+                      `VRM updated from LYAX/ \\*- to ABCD943. Updated VRM`
                     );
                   });
                 }
               );
 
               context("and the vehicle didn't have VRMs", () => {
-                it("should not append undefined into secondaryVrms array", async () => {
+                it("should not append undefined into secondaryVrms array", () => {
                   // @ts-ignore
                   const techRecord: HeavyGoodsVehicle = cloneDeep(mockData[43]);
                   // techRecord.vrms = [];
@@ -227,12 +227,12 @@ describe("VehicleProcessor", () => {
                   payload.techRecord[0].reasonForCreation = "Updated VRM";
                   payload.primaryVrm = "ABCD943";
                   // @ts-ignore
-                  await hgvProcessor.updateVehicleIdentifiers(
-                    payload,
-                    techRecord
+                  const updatedRecord = hgvProcessor.updateVehicleIdentifiers(
+                    techRecord,
+                    payload
                   );
-                  expect(techRecord.primaryVrm).toEqual("ABCD943");
-                  expect(techRecord.secondaryVrms).toBeUndefined();
+                  expect(updatedRecord.primaryVrm).toEqual("ABCD943");
+                  expect(updatedRecord.secondaryVrms).toBeUndefined();
                 });
               });
 
@@ -302,7 +302,7 @@ describe("VehicleProcessor", () => {
               context(
                 "and the trailerId is not same as the old trailerId",
                 () => {
-                  it("should set the new trailerId on the vehicle and update reason for creation", async () => {
+                  it("should set the new trailerId on the vehicle and update reason for creation", () => {
                     const techRecord: any = cloneDeep(mockData[78]);
                     techRecord.trailerId = "MMMP324";
                     // techRecord.vrms = [];
@@ -327,12 +327,12 @@ describe("VehicleProcessor", () => {
                       new MockDAO()
                     );
                     // @ts-ignore
-                    await trailerProcessor.updateVehicleIdentifiers(
-                      payload,
-                      techRecord
+                    const updatedRecord = trailerProcessor.updateVehicleIdentifiers(
+                      techRecord,
+                      payload
                     );
-                    expect(payload.trailerId).toEqual("ABCD943");
-                    expect(payload.techRecord[0].reasonForCreation).toEqual(
+                    expect(updatedRecord.trailerId).toEqual("ABCD943");
+                    expect(updatedRecord.techRecord[0].reasonForCreation).toEqual(
                       `Trailer Id updated from MMMP324 to ABCD943. Updated TrailerId`
                     );
                   });
@@ -380,7 +380,7 @@ describe("VehicleProcessor", () => {
               );
             });
             context("and the new trailerId is invalid", () => {
-              it("should return Error 400 PrimaryVrm is invalid", async () => {
+              it("should return Error 400 PrimaryVrm is invalid", () => {
                 const MockDAO = jest.fn().mockImplementation();
                 // @ts-ignore
                 const payload: Trailer = cloneDeep(mockData[78]);
@@ -391,8 +391,7 @@ describe("VehicleProcessor", () => {
                 );
                 try {
                   // @ts-ignore
-                  expect(await trailerProcessor.validate(payload, false)
-                  ).toThrowError();
+                  trailerProcessor.validate(payload, false);
                 } catch (errorResponse) {
                   expect(errorResponse.statusCode).toEqual(400);
                   expect(errorResponse.body.errors).toContain(
@@ -405,7 +404,7 @@ describe("VehicleProcessor", () => {
 
           context("and the user wants to update the secondaryVrms", () => {
             context("and the new secondaryVrms are valid", () => {
-              it("should set the new secondaryVrms on the vehicle", async () => {
+              it("should set the new secondaryVrms on the vehicle", () => {
                 // @ts-ignore
                 const techRecord: Trailer = cloneDeep(mockData[43]);
                 const MockDAO = jest.fn().mockImplementation();
@@ -417,7 +416,7 @@ describe("VehicleProcessor", () => {
                   new MockDAO()
                 );
                 // @ts-ignore
-                await trailerProcessor.updateVehicleIdentifiers(
+                trailerProcessor.updateVehicleIdentifiers(
                   payload,
                   techRecord
                 );
@@ -425,7 +424,7 @@ describe("VehicleProcessor", () => {
               });
             });
             context("and the new secondaryVrms are invalid", () => {
-              it("should return Error 400 SecondaryVrms are invalid", async () => {
+              it("should return Error 400 SecondaryVrms are invalid", () => {
                 // @ts-ignore
                 const techRecord: Trailer = cloneDeep(mockData[43]);
                 const MockDAO = jest.fn().mockImplementation();
@@ -438,8 +437,7 @@ describe("VehicleProcessor", () => {
                 payload.secondaryVrms = ["ABCD94329339239"];
                 try {
                   // @ts-ignore
-                  expect(await trailerProcessor.validate(payload, false)
-                  ).toThrowError();
+                  trailerProcessor.validate(payload, false);
                 } catch (errorResponse) {
                   expect(errorResponse.statusCode).toEqual(400);
                   expect(errorResponse.body.errors).toContain(
