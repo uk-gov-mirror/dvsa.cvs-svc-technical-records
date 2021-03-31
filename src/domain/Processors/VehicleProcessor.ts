@@ -60,16 +60,18 @@ export abstract class VehicleProcessor<T extends Vehicle> {
    */
   protected updateVehicleIdentifiers(existingVehicle: T, updatedVehicle: T): T {
     const { primaryVrm } = updatedVehicle;
+    const previousPrimaryVrm = existingVehicle.primaryVrm;
     updatedVehicle.secondaryVrms = existingVehicle.secondaryVrms;
-    if (primaryVrm && existingVehicle.primaryVrm !== primaryVrm) {
-      const previousVrm = existingVehicle.primaryVrm;
-      if (previousVrm) {
-        updatedVehicle.secondaryVrms?.push(previousVrm);
-      }
-      updatedVehicle.techRecord[0].reasonForCreation =
-        `VRM updated from ${previousVrm} to ${primaryVrm}. ` +
-        updatedVehicle.techRecord[0].reasonForCreation;
+    if(!primaryVrm || (previousPrimaryVrm === primaryVrm) ) {
+      return updatedVehicle;
     }
+    if (previousPrimaryVrm) {
+      updatedVehicle.secondaryVrms?.push(previousPrimaryVrm);
+    }
+    updatedVehicle.techRecord[0].reasonForCreation =
+      `VRM updated from ${previousPrimaryVrm} to ${primaryVrm}. ` +
+      updatedVehicle.techRecord[0].reasonForCreation;
+
     return updatedVehicle;
   }
 
@@ -427,7 +429,7 @@ export abstract class VehicleProcessor<T extends Vehicle> {
                           );
     errors = errors.concat(this.validateTechRecordFields(newVehicle.techRecord[0], isCreate));
     if (errors && errors.length) {
-      // console.error(errors);
+      console.error(errors);
       throw this.Error(400, errors);
     }
     return newVehicle.techRecord[0];

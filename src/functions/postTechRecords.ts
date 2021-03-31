@@ -36,7 +36,6 @@ const postTechRecords = async (event: any) => {
   };
 
   try {
-    console.log("inside post Tech Record function");
     const data = await techRecordsService.insertTechRecord(techRecord, msUserDetails);
     return new HTTPResponse(201, HTTPRESPONSE.TECHINICAL_RECORD_CREATED);
   } catch (error) {
