@@ -366,7 +366,7 @@ describe("techRecords", () => {
       });
 
       context("and when trying to update a vehicle", () => {
-        context("and the path parameter VIN is valid", () => {
+        context("and the path parameter system number is valid", () => {
           context("and that vehicle does exist", () => {
             it("should return status 200 and the updated vehicle", async () => {
               // @ts-ignore
@@ -382,6 +382,25 @@ describe("techRecords", () => {
               expect(res.header["access-control-allow-origin"]).toEqual("*");
               expect(res.header["access-control-allow-credentials"]).toEqual("true");
               expect(res.body.techRecord).toHaveLength(techRec.techRecord.length + 1);
+              expect(res.body.techRecord[techRec.techRecord.length].statusCode).toEqual("provisional");
+              expect(res.body.techRecord[techRec.techRecord.length - 1].statusCode).toEqual("archived");
+            });
+
+            it("should return status 200 and updated trailer with the updated trailer Id in upper case", async () => {
+              // @ts-ignore
+              const techRec: ITechRecordWrapper = cloneDeep(mockData[131]);
+              const trailerId = "ab2c3YZ5";
+              const payload = {
+                msUserDetails,
+                trailerId,
+                techRecord: techRec.techRecord
+              };
+              const res = await request.put(`vehicles/${techRec.systemNumber}`).send(payload);
+              expect(res.status).toEqual(200);
+              expect(res.header["access-control-allow-origin"]).toEqual("*");
+              expect(res.header["access-control-allow-credentials"]).toEqual("true");
+              expect(res.body.techRecord).toHaveLength(techRec.techRecord.length + 1);
+              expect(res.body.trailerId).toEqual(trailerId.toUpperCase());
               expect(res.body.techRecord[techRec.techRecord.length].statusCode).toEqual("provisional");
               expect(res.body.techRecord[techRec.techRecord.length - 1].statusCode).toEqual("archived");
             });

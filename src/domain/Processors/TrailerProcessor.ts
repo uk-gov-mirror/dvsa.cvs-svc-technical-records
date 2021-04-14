@@ -88,13 +88,13 @@ export class TrailerProcessor extends VehicleProcessor<Trailer> {
   ): Trailer {
     const { trailerId } = updatedVehicle;
     updatedVehicle = super.updateVehicleIdentifiers(existingVehicle, updatedVehicle);
-    if (trailerId && existingVehicle.trailerId !== trailerId) {
-      const previousTrailerId = existingVehicle.trailerId;
-      updatedVehicle.trailerId = trailerId;
-      updatedVehicle.techRecord[0].reasonForCreation =
-        `Trailer Id updated from ${previousTrailerId} to ${trailerId}. ` +
-        updatedVehicle.techRecord[0].reasonForCreation;
+    if(!trailerId || existingVehicle.trailerId === trailerId) {
+      return updatedVehicle;
     }
+    const previousTrailerId = existingVehicle.trailerId;
+    updatedVehicle.techRecord[0].reasonForCreation =
+      `Trailer Id updated from ${previousTrailerId} to ${trailerId}. ` +
+      updatedVehicle.techRecord[0].reasonForCreation;
     return updatedVehicle;
   }
   /* #endregion */

@@ -1,5 +1,5 @@
 import { cloneDeep, mergeWith, isArray, isEqual } from "lodash";
-import { Vehicle, TechRecord } from "../../../@Types/TechRecords";
+import { Vehicle, TechRecord, Trailer } from "../../../@Types/TechRecords";
 import IMsUserDetails from "../../../@Types/IUserDetails";
 import * as enums from "../../assets/Enums";
 import * as validators from "../../utils/validations";
@@ -370,14 +370,14 @@ export abstract class VehicleProcessor<T extends Vehicle> {
         techRecordWithAllStatuses,
         updatedVehicle
       );
-      techRecordWithAllStatuses.primaryVrm = updatedVehicle.primaryVrm;
-      techRecordWithAllStatuses.secondaryVrms = updatedVehicle.secondaryVrms;
-
-      console.log("updated identifiers");
-      console.log(updatedVehicle);
-
       updatedVehicle = this.capitaliseGeneralVehicleAttributes(updatedVehicle);
 
+      techRecordWithAllStatuses.primaryVrm = updatedVehicle.primaryVrm;
+      techRecordWithAllStatuses.secondaryVrms = updatedVehicle.secondaryVrms;
+      if(updatedVehicle.techRecord[0].vehicleType === enums.VEHICLE_TYPE.TRL) {
+        // @ts-ignore
+        techRecordWithAllStatuses.trailerId = updatedVehicle.trailerId;
+      }
       const newRecord: TechRecord = cloneDeep(techRecToArchive);
       mergeWith(
         newRecord,

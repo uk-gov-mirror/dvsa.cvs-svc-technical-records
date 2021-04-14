@@ -63,13 +63,7 @@ export const populateBodyTypeCode = (description: string) => {
   }
 };
 
-export const populatePartialVin = (vin: string) => {
-  if (vin.length < 6) {
-    return vin;
-  } else {
-    return vin.substr(vin.length - 6);
-  }
-};
+export const populatePartialVin = (vin: string) => (vin.length<6) ? vin : vin.substr(vin.length - 6);
 
 export const populateFields = (techRecord: ITechRecord) => {
   const { vehicleType } = techRecord;
