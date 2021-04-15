@@ -1,6 +1,6 @@
 import { cloneDeep } from "lodash";
 import mockData from "../../resources/technical-records.json";
-import { STATUS, VEHICLE_TYPE } from "../../../src/assets/Enums";
+import { STATUS, VEHICLE_TYPE, RECORD_COMPLETENESS } from '../../../src/assets/Enums';
 
 import {
   Car,
@@ -23,7 +23,7 @@ describe("createVehicle", () => {
     context("and the payload is valid", () => {
       it("should pass the validation and return the validated payload for TRL", async () => {
         // @ts-ignore
-        const techRec: Trailer = cloneDeep(mockData[78]);
+        const techRec: Trailer = cloneDeep(mockData[132]);
         delete techRec.techRecord[0].statusCode;
         techRec.techRecord[0].bodyType.description = "articulated";
         techRec.techRecord[0].vehicleClass.description = "trailer";
@@ -51,6 +51,9 @@ describe("createVehicle", () => {
         );
         expect(createdVehicle.techRecord[0].vehicleType).toEqual(
           VEHICLE_TYPE.TRL
+        );
+        expect(createdVehicle.techRecord[0].recordCompleteness).toEqual(
+          RECORD_COMPLETENESS[0]
         );
       });
 

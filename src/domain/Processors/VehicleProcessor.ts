@@ -49,7 +49,7 @@ export abstract class VehicleProcessor<T extends Vehicle> {
   /**
    * Calculate record completeness based on vehicle type.
    */
-  protected calculateRecordCompleteness(vehicle: T): string {
+  protected calculateRecordCompleteness(vehicle: T, trailerId?: string): string {
     return computeRecordCompleteness(vehicle);
   }
 
@@ -321,7 +321,7 @@ export abstract class VehicleProcessor<T extends Vehicle> {
       this.vehicle.techRecord[0],
       msUserDetails
     );
-    this.vehicle.techRecord[0].recordCompleteness = computeRecordCompleteness(
+    this.vehicle.techRecord[0].recordCompleteness = this.calculateRecordCompleteness(
       this.vehicle
     );
     return this.vehicle;

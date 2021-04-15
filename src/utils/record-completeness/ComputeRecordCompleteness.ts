@@ -69,16 +69,20 @@ export const computeRecordCompleteness = (techRecordWrapper: Vehicle, trailerId?
   if (!vehicleType) {
     return RECORD_COMPLETENESS_ENUM.SKELETON;
   }
+  const generalErrors = validateVehicleAttributes(vehicleType, generalAttributes)?.error;
 
-  if (validateVehicleAttributes(vehicleType, generalAttributes)?.error) {
+  if (generalErrors) {
+    console.log("general errors: ",generalErrors);
     return RECORD_COMPLETENESS_ENUM.SKELETON;
   }
 
   const mandatoryAttributesValidationResult = validateCoreAndNonCoreMandatoryTechRecordAttributes(vehicleType, techRecordWrapper);
-  isCoreMandatoryValid = !mandatoryAttributesValidationResult.coreMandatoryValidationResult?.error;
+  const mandatoryErrors = mandatoryAttributesValidationResult.coreMandatoryValidationResult?.error;
+  isCoreMandatoryValid = !mandatoryErrors;
   isNonCoreMandatoryValid = !mandatoryAttributesValidationResult.nonCoreMandatoryValidationResult?.error;
 
   if (!isCoreMandatoryValid) {
+    console.log("mandatory errors ", mandatoryErrors);
     recordCompleteness = RECORD_COMPLETENESS_ENUM.SKELETON;
   } else if (isCoreMandatoryValid && !isNonCoreMandatoryValid) {
     recordCompleteness = RECORD_COMPLETENESS_ENUM.TESTABLE;
